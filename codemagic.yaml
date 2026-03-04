@@ -8,7 +8,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       node: 22
-      java: 17
+      java: 21
       groups:
         - firebase        # GOOGLE_SERVICES_JSON (base64-encoded google-services.json)
         - android_signing  # CM_KEYSTORE, CM_KEY_ALIAS, CM_KEY_PASSWORD, CM_KEYSTORE_PASSWORD

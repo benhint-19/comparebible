@@ -2,24 +2,24 @@
 
 /* Light theme (default) */
 [data-theme="light"] {
-  --background: #FAFAF8;
-  --foreground: #1a1a1a;
-  --muted: #f0f0ee;
-  --muted-foreground: #6b6b6b;
-  --border: #e0e0dc;
-  --accent: #4a6fa5;
+  --background: #FAF8F5;
+  --foreground: #2C2A26;
+  --muted: #F0ECE6;
+  --muted-foreground: #7A7A72;
+  --border: #E2E0D8;
+  --accent: #7A6652;
   --accent-foreground: #ffffff;
 }
 
 /* Dark theme */
 [data-theme="dark"] {
-  --background: #111111;
-  --foreground: #e5e5e5;
-  --muted: #1e1e1e;
-  --muted-foreground: #999999;
-  --border: #2a2a2a;
-  --accent: #6b8ec4;
-  --accent-foreground: #111111;
+  --background: #141412;
+  --foreground: #E2E0D8;
+  --muted: #1E1E1B;
+  --muted-foreground: #9A9A90;
+  --border: #2C2C28;
+  --accent: #A08B74;
+  --accent-foreground: #141412;
 }
 
 @theme inline {

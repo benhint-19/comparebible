@@ -4,8 +4,8 @@
   "description": "Listen to and compare Bible translations side-by-side with AI-powered scholarly perspectives",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAFAF8",
-  "theme_color": "#4a6fa5",
+  "background_color": "#FAF8F5",
+  "theme_color": "#7A6652",
   "icons": [
     {
       "src": "/icon-192.png",
