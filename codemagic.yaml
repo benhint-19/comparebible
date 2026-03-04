@@ -1,0 +1,124 @@
+workflows:
+  # ---------------------------------------------------------------------------
+  # Android build → Google Play
+  # ---------------------------------------------------------------------------
+  android-release:
+    name: Android Release
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      node: 20
+      java: 17
+      groups:
+        - firebase        # GOOGLE_SERVICES_JSON (base64-encoded google-services.json)
+        - android_signing  # CM_KEYSTORE, CM_KEY_ALIAS, CM_KEY_PASSWORD, CM_KEYSTORE_PASSWORD
+        - env_vars         # NEXT_PUBLIC_API_URL, NEXT_PUBLIC_FIREBASE_*
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Build Next.js static export
+        script: |
+          CAPACITOR_BUILD=true npm run build
+
+      - name: Sync Capacitor
+        script: npx cap sync android
+
+      - name: Set up google-services.json
+        script: |
+          echo $GOOGLE_SERVICES_JSON | base64 --decode > android/app/google-services.json
+
+      - name: Set up Android signing
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > android/app/keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=keystore.jks
+          EOF
+
+      - name: Build Android release
+        script: |
+          cd android
+          ./gradlew assembleRelease
+
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/**/mapping.txt
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  # ---------------------------------------------------------------------------
+  # iOS build → App Store / TestFlight
+  # ---------------------------------------------------------------------------
+  ios-release:
+    name: iOS Release
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: CompareBible  # Set up in Codemagic UI
+    environment:
+      node: 20
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.comparebible.app
+      groups:
+        - firebase    # GOOGLE_SERVICES_PLIST (base64-encoded GoogleService-Info.plist)
+        - env_vars    # NEXT_PUBLIC_API_URL, NEXT_PUBLIC_FIREBASE_*
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Build Next.js static export
+        script: |
+          CAPACITOR_BUILD=true npm run build
+
+      - name: Sync Capacitor
+        script: npx cap sync ios
+
+      - name: Set up GoogleService-Info.plist
+        script: |
+          echo $GOOGLE_SERVICES_PLIST | base64 --decode > ios/App/App/GoogleService-Info.plist
+
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install
+
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
+      - name: Build iOS
+        script: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        expire_build_submitted_for_review: true

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722992642330",
+    "project_id": "comparebible",
+    "storage_bucket": "comparebible.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722992642330:android:b1eac22bf3e5f5b72954a3",
+        "android_client_info": {
+          "package_name": "com.comparebible.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpn_km-9DhF514IR5Yo1p2BswUQq02V-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
