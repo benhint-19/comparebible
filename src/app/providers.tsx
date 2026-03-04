@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { initNative } from "@/lib/native/init";
+import { useSyncEffect } from "@/hooks/useSync";
+import WelcomeScreen from "@/components/ui/WelcomeScreen";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useSettingsStore((s) => s.theme);
@@ -39,6 +41,9 @@ function HydrationGuard({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const nativeInitRef = useRef(false);
 
+  // Auth/sync listener - runs globally so auth state resolves on every page
+  useSyncEffect();
+
   useEffect(() => {
     setMounted(true);
     if (!nativeInitRef.current) {
@@ -58,10 +63,22 @@ function HydrationGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function WelcomeGate({ children }: { children: React.ReactNode }) {
+  const hasSeenWelcome = useSettingsStore((s) => s.hasSeenWelcome);
+
+  if (!hasSeenWelcome) {
+    return <WelcomeScreen />;
+  }
+
+  return <>{children}</>;
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <HydrationGuard>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        <WelcomeGate>{children}</WelcomeGate>
+      </ThemeProvider>
     </HydrationGuard>
   );
 }
