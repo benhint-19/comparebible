@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
+import { initNative } from "@/lib/native/init";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useSettingsStore((s) => s.theme);
@@ -36,9 +37,14 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
  */
 function HydrationGuard({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const nativeInitRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
+    if (!nativeInitRef.current) {
+      nativeInitRef.current = true;
+      initNative();
+    }
   }, []);
 
   if (!mounted) {
