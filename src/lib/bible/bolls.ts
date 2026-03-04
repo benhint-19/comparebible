@@ -4,6 +4,7 @@
 
 import type { SimpleVerse, VerseRange } from "./types";
 import { BIBLE_BOOKS } from "./books";
+import { fetchJSON } from "./fetchJSON";
 
 const BASE_URL = "https://bolls.life";
 
@@ -63,12 +64,9 @@ export async function fetchBollsChapter(
   const bookNum = bookIdToNumber[bookId];
   if (!bookNum) throw new Error(`Unknown book ID: ${bookId}`);
 
-  const res = await fetch(`${BASE_URL}/get-text/${bollsId}/${bookNum}/${chapter}/`);
-  if (!res.ok) {
-    throw new Error(`Bolls API error: ${res.status}`);
-  }
-
-  const data: BollsVerse[] = await res.json();
+  const data: BollsVerse[] = await fetchJSON(
+    `${BASE_URL}/get-text/${bollsId}/${bookNum}/${chapter}/`,
+  );
   return data.map((v) => ({
     number: v.verse,
     text: cleanText(v.text),

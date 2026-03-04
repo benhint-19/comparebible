@@ -62,8 +62,31 @@ export default function ChapterView() {
   if (error) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)] px-6 py-4 text-center">
-          <p className="text-sm text-red-500">{error}</p>
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)] px-6 py-4 text-center max-w-md">
+          <p className="text-sm font-medium text-red-500 mb-1">
+            Unable to load {bookName} {currentChapter}
+          </p>
+          <p className="text-xs text-[var(--muted-foreground)] mb-3">
+            Please check your internet connection or try a different translation.
+          </p>
+          <button
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchChapter(primaryTranslation, currentBook, currentChapter)
+                .then((data) => {
+                  setChapterData(data);
+                  setLoading(false);
+                })
+                .catch((err) => {
+                  setError(err instanceof Error ? err.message : "Failed to load chapter");
+                  setLoading(false);
+                });
+            }}
+            className="rounded-md bg-[var(--accent)] px-4 py-1.5 text-xs font-medium text-[var(--accent-foreground)] hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -72,7 +95,7 @@ export default function ChapterView() {
   if (!chapterData) return null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:px-6 sm:py-8">
       <h1 className="mb-6 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
         {bookName} {currentChapter}
       </h1>

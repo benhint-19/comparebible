@@ -25,11 +25,13 @@ export function isPushSupported(): boolean {
  * - On native (iOS/Android): uses @capacitor/push-notifications to get the FCM token.
  * - On web: uses firebase/messaging to get a web push token.
  *
- * Sends the token to our API so it can be stored server-side.
+ * Sends the token to our API so it can be stored server-side, along with
+ * the user's timezone and preferred notification hour.
  *
+ * @param preferredHour - The hour (0-23) the user wants their daily notification. Defaults to 8.
  * Returns the token string on success, or null if denied / unsupported.
  */
-export async function registerForPush(): Promise<string | null> {
+export async function registerForPush(preferredHour: number = 8): Promise<string | null> {
   if (!isPushSupported()) return null;
 
   const platform = Capacitor.isNativePlatform()
@@ -46,12 +48,15 @@ export async function registerForPush(): Promise<string | null> {
 
   if (!token) return null;
 
+  // Detect the user's IANA timezone (e.g. "America/New_York")
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   // Send to our API
   try {
     await fetch("/api/push/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, platform }),
+      body: JSON.stringify({ token, platform, timezone, preferredHour }),
     });
   } catch (err) {
     console.error("[push] Failed to register token with server:", err);

@@ -49,8 +49,30 @@ export function useTTS() {
 
   const voiceStore = useVoiceStore();
 
+  // Detect TTS support. On iOS WKWebView, speechSynthesis exists but
+  // getVoices() may return an empty list until voices are loaded. We listen
+  // for the voiceschanged event as a fallback.
   useEffect(() => {
-    setIsSupported(getSynthesis() !== null);
+    const synth = getSynthesis();
+    if (!synth) {
+      setIsSupported(false);
+      return;
+    }
+
+    // If voices are already loaded (most Android / desktop browsers)
+    if (synth.getVoices().length > 0) {
+      setIsSupported(true);
+      return;
+    }
+
+    // Voices may load asynchronously (iOS / some browsers)
+    setIsSupported(true); // Assume supported since the API exists
+
+    const onVoicesChanged = () => {
+      setIsSupported(synth.getVoices().length > 0 || true);
+    };
+    synth.addEventListener("voiceschanged", onVoicesChanged);
+    return () => synth.removeEventListener("voiceschanged", onVoicesChanged);
   }, []);
 
   const speak = useCallback(
@@ -79,7 +101,14 @@ export function useTTS() {
         utteranceRef.current = null;
       };
 
-      utterance.onerror = () => {
+      utterance.onerror = (event) => {
+        // "interrupted" and "canceled" are normal when we call synth.cancel()
+        if (
+          event.error === "interrupted" ||
+          event.error === "canceled"
+        )
+          return;
+        console.warn("[TTS] error:", event.error);
         setIsSpeaking(false);
         voiceStore.setSpeaking(false);
         utteranceRef.current = null;
@@ -87,6 +116,30 @@ export function useTTS() {
 
       utteranceRef.current = utterance;
       synth.speak(utterance);
+
+      // iOS WKWebView workaround: speechSynthesis can pause itself after
+      // ~15 seconds of continuous speech. A periodic resume() nudge keeps
+      // it going. This is harmless on other platforms.
+      const keepAlive = setInterval(() => {
+        if (!synth.speaking) {
+          clearInterval(keepAlive);
+          return;
+        }
+        synth.pause();
+        synth.resume();
+      }, 10000);
+
+      // Clear the interval when the utterance ends
+      const origOnEnd = utterance.onend;
+      utterance.onend = (ev) => {
+        clearInterval(keepAlive);
+        if (origOnEnd) origOnEnd.call(utterance, ev);
+      };
+      const origOnError = utterance.onerror;
+      utterance.onerror = (ev) => {
+        clearInterval(keepAlive);
+        if (origOnError) origOnError.call(utterance, ev);
+      };
     },
     [voiceStore],
   );

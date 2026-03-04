@@ -11,6 +11,8 @@ import {
   cacheChapter,
 } from "./cache";
 
+import { fetchJSON } from "./fetchJSON";
+
 import type {
   AvailableTranslationsResponse,
   BooksResponse,
@@ -34,11 +36,9 @@ export async function fetchAvailableTranslations(): Promise<AvailableTranslation
   const cached = await getCachedTranslations();
   if (cached) return cached;
 
-  const res = await fetch(`${BASE_URL}/api/available_translations.json`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch translations: ${res.status}`);
-  }
-  const data: AvailableTranslationsResponse = await res.json();
+  const data: AvailableTranslationsResponse = await fetchJSON(
+    `${BASE_URL}/api/available_translations.json`,
+  );
   await cacheTranslations(data);
   return data;
 }
@@ -51,15 +51,9 @@ export async function fetchBooks(translationId: string): Promise<BooksResponse> 
   const cached = await getCachedBooks(translationId);
   if (cached) return cached;
 
-  const res = await fetch(
+  const data: BooksResponse = await fetchJSON(
     `${BASE_URL}/api/${encodeURIComponent(translationId)}/books.json`,
   );
-  if (!res.ok) {
-    throw new Error(
-      `Failed to fetch books for ${translationId}: ${res.status}`,
-    );
-  }
-  const data: BooksResponse = await res.json();
   await cacheBooks(translationId, data);
   return data;
 }
@@ -76,15 +70,9 @@ export async function fetchChapter(
   const cached = await getCachedChapter(translationId, bookId, chapter);
   if (cached) return cached;
 
-  const res = await fetch(
+  const data: ChapterResponse = await fetchJSON(
     `${BASE_URL}/api/${encodeURIComponent(translationId)}/${encodeURIComponent(bookId)}/${chapter}.json`,
   );
-  if (!res.ok) {
-    throw new Error(
-      `Failed to fetch ${translationId}/${bookId}/${chapter}: ${res.status}`,
-    );
-  }
-  const data: ChapterResponse = await res.json();
   await cacheChapter(translationId, bookId, chapter, data);
   return data;
 }

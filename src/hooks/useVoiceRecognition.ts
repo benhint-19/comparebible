@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useVoiceStore } from "@/store/voiceStore";
 
 // ---------------------------------------------------------------------------
@@ -31,7 +32,7 @@ interface SpeechRecognitionErrorEvent {
 }
 
 // ---------------------------------------------------------------------------
-// Hook
+// Helpers
 // ---------------------------------------------------------------------------
 
 function getSpeechRecognitionCtor(): (new () => SpeechRecognitionInstance) | null {
@@ -40,20 +41,163 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionInstance) | nul
   return (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null;
 }
 
+/** True when running inside a Capacitor native shell (iOS / Android). */
+function isNative(): boolean {
+  return Capacitor.isNativePlatform();
+}
+
+/**
+ * Lazily import the Capacitor community speech-recognition plugin.
+ * We use a dynamic import so the module is only loaded on native platforms
+ * and doesn't break SSR / desktop-web builds where the plugin isn't needed.
+ */
+async function getCapSpeechRecognition() {
+  const mod = await import("@capacitor-community/speech-recognition");
+  return mod.SpeechRecognition;
+}
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
 export function useVoiceRecognition() {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(false);
+  /** A human-readable reason when recognition is not supported. */
+  const [unsupportedReason, setUnsupportedReason] = useState<string | null>(null);
+
+  // Track whether we're using the Capacitor native plugin
+  const usingNativeRef = useRef(false);
+  // Keep a handle to remove the Capacitor listener on cleanup
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const capListenerRef = useRef<any>(null);
 
   const voiceStore = useVoiceStore();
 
+  // ------------------------------------------------------------------
   // Check support on mount
+  // ------------------------------------------------------------------
   useEffect(() => {
-    setIsSupported(getSpeechRecognitionCtor() !== null);
+    let cancelled = false;
+
+    async function detect() {
+      // --- Native (Capacitor) path ---
+      if (isNative()) {
+        try {
+          const CapSR = await getCapSpeechRecognition();
+          const { available } = await CapSR.available();
+          if (cancelled) return;
+
+          if (available) {
+            usingNativeRef.current = true;
+            setIsSupported(true);
+            setUnsupportedReason(null);
+          } else {
+            setIsSupported(false);
+            setUnsupportedReason(
+              "Speech recognition is not available on this device.",
+            );
+          }
+        } catch (err) {
+          if (cancelled) return;
+          console.warn("[VoiceRecognition] Capacitor plugin unavailable:", err);
+          setIsSupported(false);
+          setUnsupportedReason(
+            "Speech recognition plugin failed to load.",
+          );
+        }
+        return;
+      }
+
+      // --- Web path ---
+      const webSupported = getSpeechRecognitionCtor() !== null;
+      if (cancelled) return;
+
+      setIsSupported(webSupported);
+      if (!webSupported) {
+        setUnsupportedReason(
+          "Your browser does not support speech recognition. Try Chrome or Edge on desktop.",
+        );
+      } else {
+        setUnsupportedReason(null);
+      }
+    }
+
+    detect();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const startListening = useCallback(() => {
+  // ------------------------------------------------------------------
+  // Start listening
+  // ------------------------------------------------------------------
+  const startListening = useCallback(async () => {
+    // ----- Native (Capacitor) -----
+    if (usingNativeRef.current) {
+      try {
+        const CapSR = await getCapSpeechRecognition();
+
+        // Request permissions if needed
+        const { speechRecognition: perm } = await CapSR.checkPermissions();
+        if (perm !== "granted") {
+          const { speechRecognition: newPerm } = await CapSR.requestPermissions();
+          if (newPerm !== "granted") {
+            console.warn("[VoiceRecognition] Permission denied");
+            return;
+          }
+        }
+
+        setTranscript("");
+        voiceStore.setTranscript("");
+
+        // Listen for partial results
+        capListenerRef.current = await CapSR.addListener(
+          "partialResults",
+          (data: { matches: string[] }) => {
+            const text = data.matches?.[0] ?? "";
+            setTranscript(text);
+            voiceStore.setTranscript(text);
+          },
+        );
+
+        // Also listen for listeningState to detect stop
+        const stateListener = await CapSR.addListener(
+          "listeningState",
+          (data: { status: "started" | "stopped" }) => {
+            if (data.status === "started") {
+              setIsListening(true);
+              voiceStore.setListening(true);
+            } else {
+              setIsListening(false);
+              voiceStore.setListening(false);
+            }
+          },
+        );
+
+        // Store both listeners for cleanup
+        const partialListener = capListenerRef.current;
+        capListenerRef.current = { partialListener, stateListener };
+
+        await CapSR.start({
+          language: "en-US",
+          partialResults: true,
+          popup: false,
+        });
+
+        setIsListening(true);
+        voiceStore.setListening(true);
+      } catch (err) {
+        console.warn("[VoiceRecognition] Native start error:", err);
+        setIsListening(false);
+        voiceStore.setListening(false);
+      }
+      return;
+    }
+
+    // ----- Web Speech API -----
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) return;
 
@@ -92,9 +236,17 @@ export function useVoiceRecognition() {
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      // "aborted" is not a real error — happens when we call .abort()
+      // "aborted" is not a real error -- happens when we call .abort()
       if (event.error === "aborted") return;
-      console.warn("[VoiceRecognition] error:", event.error, event.message);
+
+      if (event.error === "not-allowed") {
+        console.warn(
+          "[VoiceRecognition] Microphone permission denied. Please allow microphone access in your browser settings.",
+        );
+      } else {
+        console.warn("[VoiceRecognition] error:", event.error, event.message);
+      }
+
       setIsListening(false);
       voiceStore.setListening(false);
     };
@@ -108,14 +260,58 @@ export function useVoiceRecognition() {
     recognition.start();
   }, [voiceStore]);
 
-  const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-  }, []);
+  // ------------------------------------------------------------------
+  // Stop listening
+  // ------------------------------------------------------------------
+  const stopListening = useCallback(async () => {
+    // Native
+    if (usingNativeRef.current) {
+      try {
+        const CapSR = await getCapSpeechRecognition();
+        await CapSR.stop();
+      } catch {
+        // ignore -- may already be stopped
+      }
+      // Clean up listeners
+      if (capListenerRef.current) {
+        try {
+          capListenerRef.current.partialListener?.remove?.();
+          capListenerRef.current.stateListener?.remove?.();
+        } catch {
+          // ignore
+        }
+        capListenerRef.current = null;
+      }
+      setIsListening(false);
+      voiceStore.setListening(false);
+      return;
+    }
 
+    // Web
+    recognitionRef.current?.stop();
+  }, [voiceStore]);
+
+  // ------------------------------------------------------------------
   // Cleanup on unmount
+  // ------------------------------------------------------------------
   useEffect(() => {
     return () => {
+      // Web cleanup
       recognitionRef.current?.abort();
+
+      // Native cleanup
+      if (usingNativeRef.current && capListenerRef.current) {
+        try {
+          capListenerRef.current.partialListener?.remove?.();
+          capListenerRef.current.stateListener?.remove?.();
+        } catch {
+          // ignore
+        }
+        // Best-effort stop
+        getCapSpeechRecognition()
+          .then((CapSR) => CapSR.stop())
+          .catch(() => {});
+      }
     };
   }, []);
 
@@ -125,5 +321,6 @@ export function useVoiceRecognition() {
     startListening,
     stopListening,
     isSupported,
+    unsupportedReason,
   };
 }

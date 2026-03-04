@@ -19,6 +19,7 @@ const PUSH_REGISTERED_KEY = "push-registered";
 export function usePushNotifications() {
   const pushEnabled = useSettingsStore((s) => s.pushEnabled);
   const setPushEnabled = useSettingsStore((s) => s.setPushEnabled);
+  const pushTime = useSettingsStore((s) => s.pushTime);
   const quizCompleted = useSettingsStore((s) => s.quizCompleted);
   const navigateTo = useReaderStore((s) => s.navigateTo);
   const listenerCleanupRef = useRef<(() => void) | null>(null);
@@ -31,12 +32,13 @@ export function usePushNotifications() {
     const alreadyRegistered = localStorage.getItem(PUSH_REGISTERED_KEY);
     if (alreadyRegistered) return;
 
-    registerForPush().then((token) => {
+    const preferredHour = parseInt(pushTime, 10) || 8;
+    registerForPush(preferredHour).then((token) => {
       if (token) {
         localStorage.setItem(PUSH_REGISTERED_KEY, "true");
       }
     });
-  }, [quizCompleted, pushEnabled]);
+  }, [quizCompleted, pushEnabled, pushTime]);
 
   // --- Handle notification taps ---
   useEffect(() => {

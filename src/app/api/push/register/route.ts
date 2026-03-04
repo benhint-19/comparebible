@@ -7,14 +7,19 @@ import { getAdminFirestore } from "@/lib/push/firebaseAdmin";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  let body: { token?: string; platform?: string };
+  let body: {
+    token?: string;
+    platform?: string;
+    timezone?: string;
+    preferredHour?: number;
+  };
   try {
     body = await request.json();
   } catch {
     return new Response("Invalid JSON body", { status: 400 });
   }
 
-  const { token, platform } = body;
+  const { token, platform, timezone, preferredHour } = body;
   if (!token || !platform) {
     return new Response("Missing required fields: token, platform", {
       status: 400,
@@ -32,15 +37,19 @@ export async function POST(request: Request) {
       await tokensRef.add({
         token,
         platform,
+        timezone: timezone || "UTC",
+        preferredHour: preferredHour ?? 8,
         createdAt: new Date().toISOString(),
         lastSeen: new Date().toISOString(),
       });
     } else {
-      // Update lastSeen timestamp
+      // Update lastSeen timestamp and preferences
       const doc = existing.docs[0];
       await doc.ref.update({
         lastSeen: new Date().toISOString(),
         platform,
+        ...(timezone !== undefined && { timezone }),
+        ...(preferredHour !== undefined && { preferredHour }),
       });
     }
 

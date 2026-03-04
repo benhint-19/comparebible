@@ -8,10 +8,12 @@ interface SettingsState {
   fontSize: number;
   quizCompleted: boolean;
   pushEnabled: boolean;
+  pushTime: string;
   setTheme: (theme: "light" | "dark" | "system") => void;
   setFontSize: (size: number) => void;
   setQuizCompleted: (completed: boolean) => void;
   setPushEnabled: (enabled: boolean) => void;
+  setPushTime: (time: string) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -21,6 +23,7 @@ export const useSettingsStore = create<SettingsState>()(
       fontSize: 16,
       quizCompleted: false,
       pushEnabled: false,
+      pushTime: "08:00",
 
       setTheme: (theme) => set({ theme }),
 
@@ -29,6 +32,8 @@ export const useSettingsStore = create<SettingsState>()(
       setQuizCompleted: (completed) => set({ quizCompleted: completed }),
 
       setPushEnabled: (enabled) => set({ pushEnabled: enabled }),
+
+      setPushTime: (time) => set({ pushTime: time }),
     }),
     {
       name: "settings-storage",

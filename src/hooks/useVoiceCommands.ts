@@ -20,6 +20,7 @@ export function useVoiceCommands() {
     startListening: startRecognition,
     stopListening: stopRecognition,
     isSupported,
+    unsupportedReason,
   } = useVoiceRecognition();
 
   const { speak } = useTTS();
@@ -98,6 +99,7 @@ export function useVoiceCommands() {
     stopListening,
     isListening,
     isSupported,
+    unsupportedReason,
     lastCommand,
   };
 }

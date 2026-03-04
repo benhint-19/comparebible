@@ -26,6 +26,8 @@ export async function GET(request: Request) {
     const db = getAdminFirestore();
     const messaging = getAdminMessaging();
 
+    const utcHour = new Date().getUTCHours();
+
     // Fetch all device tokens
     const snapshot = await db.collection("device_tokens").get();
     if (snapshot.empty) {
@@ -37,7 +39,28 @@ export async function GET(request: Request) {
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.token) {
+      if (!data.token) return;
+
+      // Determine the current local hour for this device's timezone
+      const tz = data.timezone || "UTC";
+      const preferredHour = data.preferredHour ?? 8;
+
+      let localHour: number;
+      try {
+        // Use Intl to find the current hour in the device's timezone
+        const formatter = new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          hour: "numeric",
+          hour12: false,
+        });
+        localHour = parseInt(formatter.format(new Date()), 10);
+      } catch {
+        // If timezone is invalid, fall back to UTC
+        localHour = utcHour;
+      }
+
+      // Only include devices whose preferred hour matches the current local hour
+      if (localHour === preferredHour) {
         tokens.push(data.token);
         docRefs.set(data.token, doc.ref);
       }
