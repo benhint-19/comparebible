@@ -48,10 +48,12 @@ workflows:
       - android/app/build/outputs/**/mapping.txt
 
     publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
+      email:
+        recipients:
+          - ben@example.com  # Update with your email
+        notify:
+          success: true
+          failure: true
 
   # ---------------------------------------------------------------------------
   # iOS build → App Store / TestFlight
