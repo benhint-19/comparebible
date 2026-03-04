@@ -23,6 +23,7 @@ export type VoiceCommandType =
   | "audio_next_chapter"
   | "audio_prev_chapter"
   | "audio_repeat"
+  | "audio_compare"
   | "audio_analyze"
   | "audio_exit"
   | "unknown";
@@ -69,11 +70,18 @@ const AUDIO_INTENT_PATTERNS: IntentPattern[] = [
       /^(?:exit\s+audio(?:\s+mode)?|stop\s+listening|turn\s+off\s+audio|quit\s+audio|close\s+audio|exit)$/,
   },
 
-  // Analyze / go deeper
+  // Compare translations
+  {
+    type: "audio_compare",
+    pattern:
+      /^(?:compare|compare\s+(?:this|translations?|versions?)|show\s+(?:other\s+)?translations?|show\s+(?:other\s+)?versions?|other\s+translations?|what\s+do\s+other\s+translations?\s+say|how\s+(?:do|does)\s+(?:other|different)\s+translations?\s+(?:read|say)|expand\s+(?:this|verse))$/,
+  },
+
+  // AI analysis
   {
     type: "audio_analyze",
     pattern:
-      /^(?:analyze\s+this|analyse\s+this|go\s+deeper|what\s+does\s+this\s+mean|explain\s+this|tell\s+me\s+more|what\s+does\s+that\s+mean)$/,
+      /^(?:analyze\s+this|analyse\s+this|go\s+deeper|what\s+does\s+this\s+mean|explain\s+this|tell\s+me\s+more|what\s+does\s+that\s+mean|ai\s+analysis|get\s+ai|ask\s+ai|what\s+do\s+scholars?\s+think|perspectives?)$/,
   },
 
   // Next chapter

@@ -7,6 +7,8 @@ import { useTTS } from "@/hooks/useTTS";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { parseVoiceCommand } from "@/lib/voice/commands";
 import type { ParsedBibleReference } from "@/lib/voice/references";
+import { useAIStore } from "@/store/aiStore";
+import { getBookById } from "@/lib/bible/books";
 import { useRouter } from "next/navigation";
 
 interface SimpleVerse {
@@ -40,9 +42,15 @@ export function useAudioMode(verses: SimpleVerse[]) {
   } = useAudioStore.getState();
 
   const navigateTo = useReaderStore((s) => s.navigateTo);
+  const currentBook = useReaderStore((s) => s.currentBook);
+  const currentChapter = useReaderStore((s) => s.currentChapter);
   const toggleVerseExpanded = useReaderStore((s) => s.toggleVerseExpanded);
   const nextChapter = useReaderStore((s) => s.nextChapter);
   const prevChapter = useReaderStore((s) => s.prevChapter);
+
+  const setCurrentPassage = useAIStore((s) => s.setCurrentPassage);
+  const toggleAIPanel = useAIStore((s) => s.togglePanel);
+  const isAIPanelOpen = useAIStore((s) => s.isPanelOpen);
 
   const { speak, stop: stopTTS, isSpeaking, isSupported: ttsSupported } = useTTS(playbackSpeed);
   const {
@@ -223,11 +231,29 @@ export function useAudioMode(verses: SimpleVerse[]) {
         setTimeout(() => speakCurrentVerse(), 100);
         break;
 
-      case "audio_analyze":
-        // Pause, expand verse, trigger analysis
+      case "audio_compare":
+        // Pause and expand verse to show parallel translations
         audioPause();
         toggleVerseExpanded(currentVerseRef.current);
         break;
+
+      case "audio_analyze": {
+        // Pause, expand verse, and open AI analysis panel
+        audioPause();
+        toggleVerseExpanded(currentVerseRef.current);
+        const verseNum = currentVerseRef.current;
+        const verse = versesRef.current.find((v) => v.number === verseNum);
+        if (verse) {
+          const bookMeta = getBookById(currentBook);
+          const bookName = bookMeta?.name ?? currentBook;
+          const passage = `${bookName} ${currentChapter}:${verseNum}`;
+          setCurrentPassage(passage, verse.text);
+          if (!isAIPanelOpen) {
+            toggleAIPanel();
+          }
+        }
+        break;
+      }
 
       case "navigate": {
         const ref = command.payload;

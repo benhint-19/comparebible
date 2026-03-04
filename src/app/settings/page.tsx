@@ -196,8 +196,9 @@ export default function SettingsPage() {
             <div>
               <h3 className="font-medium text-[var(--color-foreground)] mb-1.5">Exploration</h3>
               <ul className="space-y-1 text-[var(--color-muted-foreground)]">
+                <li>&ldquo;Compare&rdquo; or &ldquo;Show translations&rdquo; &mdash; Expand the current verse to show parallel translations</li>
                 <li>&ldquo;Analyze this&rdquo; or &ldquo;Go deeper&rdquo; &mdash; Open AI analysis for the current verse</li>
-                <li>&ldquo;What does this mean?&rdquo; &mdash; Same as above</li>
+                <li>&ldquo;What does this mean?&rdquo; or &ldquo;Perspectives&rdquo; &mdash; Same as above</li>
               </ul>
             </div>
 
