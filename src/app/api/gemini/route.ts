@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const persona = getPersona(personaId);
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
   const prompt = `Passage: ${passage}\n\nText:\n${verseText}\n\nProvide your perspective on this passage.`;
 

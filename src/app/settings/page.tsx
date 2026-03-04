@@ -79,7 +79,7 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-3">Primary Translation</h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
-            The main English interpretation you read. Different translators render the original Hebrew and Greek texts with different priorities — some prioritize literal accuracy, others readability.
+            The main English interpretation you read. Different translators render the original Hebrew and Greek texts with different priorities - some prioritize literal accuracy, others readability.
           </p>
           <TranslationSelect
             mode="single"
@@ -93,7 +93,7 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">Translation Presets</h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
-            Quick-start groupings — click one to set your parallel translations.
+            Quick-start groupings - click one to set your parallel translations.
           </p>
           <div className="grid gap-2">
             {translationPresets.map((preset) => {
@@ -124,7 +124,7 @@ export default function SettingsPage() {
                     {preset.explanations.map((ex) => (
                       <li key={ex.id} className="text-xs text-[var(--color-muted-foreground)] leading-snug">
                         <span className="font-semibold text-[var(--color-foreground)]">{ex.id.replace("bolls:", "").replace("eng_", "").toUpperCase()}</span>
-                        {" — "}
+                        {" - "}
                         {ex.why}
                       </li>
                     ))}
@@ -242,7 +242,7 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">About</h2>
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            Selah — Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore AI-powered analysis from multiple scholarly perspectives.
+            Selah - Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore AI-powered analysis from multiple scholarly perspectives.
             Bible text from bible.helloao.org. AI analysis powered by Google Gemini.
           </p>
         </section>
@@ -252,7 +252,7 @@ export default function SettingsPage() {
 }
 
 // ---------------------------------------------------------------------------
-// Account & Sync section — extracted for readability
+// Account & Sync section - extracted for readability
 // ---------------------------------------------------------------------------
 
 function AccountSyncSection({
