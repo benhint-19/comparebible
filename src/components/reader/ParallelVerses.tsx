@@ -4,17 +4,20 @@ import { useState, useEffect } from "react";
 import { useTranslationStore } from "@/store/translationStore";
 import { fetchVerseRange } from "@/lib/bible/api";
 import type { VerseRange } from "@/lib/bible/types";
+import VerseAIButton from "@/components/ai/VerseAIButton";
 
 interface ParallelVersesProps {
   bookId: string;
   chapter: number;
   verseNumber: number;
+  verseText?: string;
 }
 
 export default function ParallelVerses({
   bookId,
   chapter,
   verseNumber,
+  verseText: primaryVerseText,
 }: ParallelVersesProps) {
   const parallelTranslations = useTranslationStore(
     (s) => s.parallelTranslations,
@@ -50,9 +53,17 @@ export default function ParallelVerses({
 
   if (parallelTranslations.length === 0) {
     return (
-      <p className="text-sm text-[var(--muted-foreground)] italic py-2 pl-6">
-        No parallel translations selected.
-      </p>
+      <div className="py-2 pl-4 sm:pl-6">
+        <p className="text-sm text-[var(--muted-foreground)] italic mb-2">
+          No parallel translations selected.
+        </p>
+        <VerseAIButton
+          bookId={bookId}
+          chapter={chapter}
+          verseNumber={verseNumber}
+          verseText={primaryVerseText ?? ""}
+        />
+      </div>
     );
   }
 
@@ -89,6 +100,12 @@ export default function ParallelVerses({
           </div>
         );
       })}
+      <VerseAIButton
+        bookId={bookId}
+        chapter={chapter}
+        verseNumber={verseNumber}
+        verseText={primaryVerseText ?? ""}
+      />
     </div>
   );
 }

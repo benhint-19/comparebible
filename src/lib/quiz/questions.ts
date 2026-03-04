@@ -10,6 +10,7 @@ export interface TranslationProfile {
 export interface QuizOption {
   label: string;
   weights: Partial<TranslationProfile>;
+  tooltip?: string;
 }
 
 export interface QuizQuestion {
@@ -17,6 +18,7 @@ export interface QuizQuestion {
   category: string;
   text: string;
   options: QuizOption[];
+  questionTooltip?: string;
 }
 
 export const quizQuestions: QuizQuestion[] = [
@@ -48,8 +50,16 @@ export const quizQuestions: QuizQuestion[] = [
     category: "Reading Style",
     text: "When reading, do you prefer...",
     options: [
-      { label: "Word-for-word accuracy", weights: { readability: 3, formality: 8, study_features: 7 } },
-      { label: "Thought-for-thought clarity", weights: { readability: 7, formality: 5, study_features: 5 } },
+      {
+        label: "Word-for-word accuracy",
+        weights: { readability: 3, formality: 8, study_features: 7 },
+        tooltip: "A translation approach (called 'formal equivalence') that tries to mirror the original Hebrew/Greek word order and structure as closely as possible.",
+      },
+      {
+        label: "Thought-for-thought clarity",
+        weights: { readability: 7, formality: 5, study_features: 5 },
+        tooltip: "A translation approach (called 'dynamic equivalence') that rephrases the original meaning in natural modern English, even if the word order changes.",
+      },
       { label: "A balance of both", weights: { readability: 6, formality: 6, study_features: 5 } },
       { label: "Easy readability above all", weights: { readability: 10, formality: 2, study_features: 3 } },
     ],
@@ -58,6 +68,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "gender-language",
     category: "Reading Style",
     text: "How important is gender-inclusive language?",
+    questionTooltip: "Whether the translation uses terms like 'people' or 'brothers and sisters' instead of the traditional 'men' or 'brothers' when the original text refers to mixed groups.",
     options: [
       { label: "Very important", weights: { theological_tradition: "mainline", readability: 7 } },
       { label: "Somewhat important", weights: { theological_tradition: "neutral", readability: 7 } },
@@ -80,6 +91,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "paraphrase-comfort",
     category: "Reading Style",
     text: "How do you feel about paraphrased translations?",
+    questionTooltip: "Very free renderings that completely rewrite passages in casual modern language, like The Message. Not a direct translation but an interpretation.",
     options: [
       { label: "Love them — easier to understand", weights: { readability: 10, formality: 1, archaic: 1 } },
       { label: "OK sometimes", weights: { readability: 7, formality: 4, archaic: 1 } },
@@ -105,6 +117,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "study-notes",
     category: "Theological Leaning",
     text: "How important are study notes and cross-references?",
+    questionTooltip: "Footnotes explaining context, alternative translations, and links to related passages elsewhere in the Bible.",
     options: [
       { label: "Essential — I want deep footnotes", weights: { study_features: 10 } },
       { label: "Nice to have", weights: { study_features: 6 } },
@@ -116,6 +129,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "deuterocanonical",
     category: "Theological Leaning",
     text: "Do you value including the deuterocanonical / apocryphal books?",
+    questionTooltip: "Additional books found in Catholic and Orthodox Bibles but not in most Protestant Bibles, such as Tobit, Wisdom, and Maccabees.",
     options: [
       { label: "Yes, essential", weights: { theological_tradition: "catholic" } },
       { label: "Would be nice", weights: { theological_tradition: "mainline" } },
@@ -127,9 +141,18 @@ export const quizQuestions: QuizQuestion[] = [
     id: "textual-basis",
     category: "Theological Leaning",
     text: "What textual basis do you prefer for the New Testament?",
+    questionTooltip: "Which ancient manuscript collection the translation was based on. 'Majority/Byzantine' uses later but more numerous manuscripts; 'Critical/eclectic' uses older manuscripts that scholars consider closer to the originals.",
     options: [
-      { label: "Majority / Byzantine text (Textus Receptus)", weights: { textual_basis: "majority", archaic: 5 } },
-      { label: "Critical / eclectic text (NA/UBS)", weights: { textual_basis: "critical", study_features: 6 } },
+      {
+        label: "Majority / Byzantine text (Textus Receptus)",
+        weights: { textual_basis: "majority", archaic: 5 },
+        tooltip: "A family of Greek manuscripts from the medieval period. More copies exist but they're newer. Used by the KJV and NKJV.",
+      },
+      {
+        label: "Critical / eclectic text (NA/UBS)",
+        weights: { textual_basis: "critical", study_features: 6 },
+        tooltip: "A scholarly reconstruction using the oldest available manuscripts (like the Dead Sea Scrolls and early papyri). Used by most modern translations.",
+      },
       { label: "Don't know / don't care", weights: { textual_basis: "eclectic" } },
     ],
   },
@@ -137,6 +160,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "theological-neutrality",
     category: "Theological Leaning",
     text: "How important is theological neutrality in translation?",
+    questionTooltip: "Whether the translation avoids favoring any particular Christian denomination's doctrinal positions in how it renders disputed passages.",
     options: [
       { label: "Very important — minimize bias", weights: { theological_tradition: "academic", study_features: 7 } },
       { label: "Somewhat important", weights: { theological_tradition: "neutral", study_features: 5 } },
@@ -148,6 +172,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "red-letter",
     category: "Theological Leaning",
     text: "Do you want red-letter editions (Jesus's words highlighted)?",
+    questionTooltip: "Bibles that print the words spoken by Jesus in red ink to distinguish them from narrative and other speakers.",
     options: [
       { label: "Yes, definitely", weights: { theological_tradition: "evangelical" } },
       { label: "Don't care", weights: {} },
@@ -193,6 +218,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "key-term-consistency",
     category: "Study Goals",
     text: "How important is consistency of key term translation?",
+    questionTooltip: "Whether the same Hebrew or Greek word is always translated the same way in English throughout the Bible, making it easier to trace themes.",
     options: [
       { label: "Very important", weights: { study_features: 9, formality: 7 } },
       { label: "Somewhat important", weights: { study_features: 6, formality: 5 } },
@@ -204,6 +230,7 @@ export const quizQuestions: QuizQuestion[] = [
     id: "reading-aloud",
     category: "Study Goals",
     text: "Do you want a translation that is good for reading aloud?",
+    questionTooltip: "Some translations have a more natural rhythm and flow when spoken, which matters for church readings or audiobook-style listening.",
     options: [
       { label: "Yes, very important", weights: { readability: 8, formality: 5, archaic: 2 } },
       { label: "Somewhat important", weights: { readability: 7, formality: 5 } },

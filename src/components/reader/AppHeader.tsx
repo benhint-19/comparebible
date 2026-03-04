@@ -6,6 +6,7 @@ import { getBookById } from "@/lib/bible/books";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import BookPicker from "@/components/reader/BookPicker";
 import SearchBar from "@/components/search/SearchBar";
+import TestamentSwitcher from "@/components/reader/TestamentSwitcher";
 
 export default function AppHeader() {
   const currentBook = useReaderStore((s) => s.currentBook);
@@ -61,6 +62,7 @@ export default function AppHeader() {
           <ThemeToggle />
         </div>
       </div>
+      <TestamentSwitcher />
     </header>
   );
 }

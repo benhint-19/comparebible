@@ -56,6 +56,7 @@ export default function SearchResults({ query }: SearchResultsProps) {
   const router = useRouter();
   const navigateTo = useReaderStore((s) => s.navigateTo);
   const primaryTranslation = useTranslationStore((s) => s.primaryTranslation);
+  const parallelTranslations = useTranslationStore((s) => s.parallelTranslations);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -67,7 +68,9 @@ export default function SearchResults({ query }: SearchResultsProps) {
     let cancelled = false;
     setLoading(true);
 
-    searchBible(query, primaryTranslation).then((res) => {
+    const translationIds = [primaryTranslation, ...parallelTranslations];
+
+    searchBible(query, translationIds).then((res) => {
       if (!cancelled) {
         setResults(res);
         setLoading(false);
@@ -77,7 +80,7 @@ export default function SearchResults({ query }: SearchResultsProps) {
     return () => {
       cancelled = true;
     };
-  }, [query, primaryTranslation]);
+  }, [query, primaryTranslation, parallelTranslations]);
 
   function handleResultClick(result: SearchResult) {
     navigateTo(result.bookId, result.chapter);
@@ -127,14 +130,19 @@ export default function SearchResults({ query }: SearchResultsProps) {
 
       <ul className="space-y-1">
         {results.map((result, i) => (
-          <li key={`${result.bookId}-${result.chapter}-${result.verseNumber}-${i}`}>
+          <li key={`${result.bookId}-${result.chapter}-${result.verseNumber}-${result.translationId}-${i}`}>
             <button
               onClick={() => handleResultClick(result)}
               className="w-full rounded-lg border border-border bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted"
             >
-              <span className="text-sm font-medium text-accent">
-                {result.bookName} {result.chapter}:{result.verseNumber}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-accent">
+                  {result.bookName} {result.chapter}:{result.verseNumber}
+                </span>
+                <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent uppercase tracking-wide">
+                  {result.translationId}
+                </span>
+              </div>
               <p className="mt-1 text-sm leading-relaxed text-foreground">
                 <HighlightedText text={result.text} term={query} />
               </p>

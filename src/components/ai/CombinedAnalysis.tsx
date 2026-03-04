@@ -5,8 +5,9 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef } from "react";
-import { personas, personaIds } from "@/lib/ai/personas";
+import { personas } from "@/lib/ai/personas";
 import { useGemini } from "@/hooks/useGemini";
+import { useAIStore } from "@/store/aiStore";
 
 interface CombinedCardProps {
   personaId: string;
@@ -61,9 +62,11 @@ export default function CombinedAnalysis({
   passage,
   verseText,
 }: CombinedAnalysisProps) {
+  const selectedPersonas = useAIStore((s) => s.selectedPersonas);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {personaIds.map((id) => (
+      {selectedPersonas.map((id) => (
         <CombinedCard
           key={id}
           personaId={id}

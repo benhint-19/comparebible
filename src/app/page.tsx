@@ -9,6 +9,7 @@ import { VoiceFeedback } from "@/components/voice/VoiceFeedback";
 import { TTSControls } from "@/components/voice/TTSControls";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 import OnboardingModal from "@/components/quiz/OnboardingModal";
+import VerseOfDay from "@/components/ui/VerseOfDay";
 
 export default function Home() {
   return (
@@ -23,6 +24,7 @@ export default function Home() {
       <ChapterNav />
 
       <OnboardingModal />
+      <VerseOfDay />
       <AIPerspectivePanel />
       <VoiceFab />
       <VoiceFeedback />

@@ -1,6 +1,7 @@
 "use client";
 
 import type { QuizQuestion as QuizQuestionType } from "@/lib/quiz/questions";
+import Tooltip from "@/components/ui/Tooltip";
 
 interface QuizQuestionProps {
   question: QuizQuestionType;
@@ -12,7 +13,13 @@ export default function QuizQuestion({ question, selectedOption, onSelect }: Qui
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-[var(--color-foreground)]">
-        {question.text}
+        {question.questionTooltip ? (
+          <Tooltip text={question.questionTooltip}>
+            {question.text}
+          </Tooltip>
+        ) : (
+          question.text
+        )}
       </h2>
 
       <div className="space-y-2">
@@ -42,7 +49,15 @@ export default function QuizQuestion({ question, selectedOption, onSelect }: Qui
                     <span className="w-2 h-2 rounded-full bg-white" />
                   )}
                 </span>
-                <span className="text-sm">{option.label}</span>
+                <span className="text-sm">
+                  {option.tooltip ? (
+                    <Tooltip text={option.tooltip}>
+                      {option.label}
+                    </Tooltip>
+                  ) : (
+                    option.label
+                  )}
+                </span>
               </span>
             </button>
           );

@@ -121,7 +121,7 @@ export function extractSimpleVerses(chapter: ChapterResponse): SimpleVerse[] {
 
 /**
  * Fetch a specific verse range from a translation, useful for parallel
- * comparison views. Returns a VerseRange with only the requested verses.
+ * comparison views. Routes to Bolls.life API for copyrighted translations.
  */
 export async function fetchVerseRange(
   translationId: string,
@@ -130,6 +130,12 @@ export async function fetchVerseRange(
   startVerse: number,
   endVerse: number,
 ): Promise<VerseRange> {
+  // Route Bolls translations to the Bolls.life adapter
+  if (translationId.startsWith("bolls:")) {
+    const { fetchBollsVerseRange } = await import("./bolls");
+    return fetchBollsVerseRange(translationId, bookId, chapter, startVerse, endVerse);
+  }
+
   const chapterData = await fetchChapter(translationId, bookId, chapter);
   const all = extractSimpleVerses(chapterData);
   const verses = all.filter(

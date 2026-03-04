@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useReaderStore } from "@/store/readerStore";
 import type { ChapterVerse, VerseContentItem } from "@/lib/bible/types";
 import ParallelVerses from "@/components/reader/ParallelVerses";
@@ -31,6 +32,18 @@ export default function VerseBlock({
   const toggleVerseExpanded = useReaderStore((s) => s.toggleVerseExpanded);
   const isExpanded = useReaderStore((s) => s.expandedVerses.has(verseNumber));
 
+  const plainText = useMemo(() => {
+    return verse.content
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if ("text" in item) return item.text;
+        return "";
+      })
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }, [verse.content]);
+
   return (
     <div className="group">
       <p
@@ -50,6 +63,7 @@ export default function VerseBlock({
               bookId={bookId}
               chapter={chapter}
               verseNumber={verseNumber}
+              verseText={plainText}
             />
           )}
         </div>

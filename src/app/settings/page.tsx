@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslationStore } from "@/store/translationStore";
 import { translationProfiles } from "@/lib/quiz/translations";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import PersonaSettings from "@/components/ai/PersonaSettings";
 
 export default function SettingsPage() {
   const { fontSize, setFontSize, quizCompleted } = useSettingsStore();
@@ -141,6 +142,15 @@ export default function SettingsPage() {
                 ))}
             </div>
           )}
+        </section>
+
+        {/* AI Perspectives */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">AI Perspectives</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Choose which scholarly perspectives to include when analyzing passages.
+          </p>
+          <PersonaSettings />
         </section>
 
         {/* Quiz */}

@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from "react";
 import { useAIStore } from "@/store/aiStore";
-import { personas, personaIds } from "@/lib/ai/personas";
+import { personas } from "@/lib/ai/personas";
 import { useGemini } from "@/hooks/useGemini";
 import PersonaCard from "@/components/ai/PersonaCard";
 import CombinedAnalysis from "@/components/ai/CombinedAnalysis";
@@ -16,6 +16,7 @@ export default function AIPerspectivePanel() {
   const togglePanel = useAIStore((s) => s.togglePanel);
   const selectedPersona = useAIStore((s) => s.selectedPersona);
   const setPersona = useAIStore((s) => s.setPersona);
+  const selectedPersonas = useAIStore((s) => s.selectedPersonas);
 
   const [showCombined, setShowCombined] = useState(false);
 
@@ -72,7 +73,7 @@ export default function AIPerspectivePanel() {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Persona selector grid */}
           <div className="grid grid-cols-2 gap-2">
-            {personaIds.map((id) => (
+            {selectedPersonas.map((id) => (
               <PersonaCard
                 key={id}
                 persona={personas[id]}
@@ -100,7 +101,7 @@ export default function AIPerspectivePanel() {
               }
             `}
           >
-            Combined Analysis (All 6 Perspectives)
+            Combined Analysis (All {selectedPersonas.length} Perspectives)
           </button>
 
           {/* Response area */}
