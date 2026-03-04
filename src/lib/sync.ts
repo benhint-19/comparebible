@@ -11,8 +11,10 @@ import type { VerseNote } from "@/store/notesStore";
 // ---- Firestore helpers (lazy-loaded) ---- //
 
 async function getDb() {
+  const app = getFirebaseApp();
+  if (!app) throw new Error("Firebase is not configured");
   const { getFirestore } = await import("firebase/firestore");
-  return getFirestore(getFirebaseApp());
+  return getFirestore(app);
 }
 
 async function firestoreDoc(path: string) {

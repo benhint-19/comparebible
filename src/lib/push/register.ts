@@ -118,6 +118,7 @@ async function registerWeb(): Promise<string | null> {
     }
 
     const app = getFirebaseApp();
+    if (!app) return null;
     const { getMessaging, getToken } = await import("firebase/messaging");
     const messaging = getMessaging(app);
 

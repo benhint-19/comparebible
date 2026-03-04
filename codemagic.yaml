@@ -19,6 +19,8 @@ workflows:
 
       - name: Build Next.js static export
         script: |
+          # Remove API routes — native app calls Vercel-hosted APIs via NEXT_PUBLIC_API_URL
+          rm -rf src/app/api
           CAPACITOR_BUILD=true npm run build
 
       - name: Sync Capacitor
@@ -78,6 +80,8 @@ workflows:
 
       - name: Build Next.js static export
         script: |
+          # Remove API routes — native app calls Vercel-hosted APIs via NEXT_PUBLIC_API_URL
+          rm -rf src/app/api
           CAPACITOR_BUILD=true npm run build
 
       - name: Sync Capacitor

@@ -12,16 +12,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+/** True when the required Firebase env vars are present. */
+export function isFirebaseConfigured(): boolean {
+  return !!(firebaseConfig.apiKey && firebaseConfig.projectId);
+}
+
 let app: FirebaseApp | undefined;
 
 /**
  * Returns the Firebase client app, initializing it on first call.
  * Safe to call multiple times -- returns the existing instance.
- * Only works client-side.
+ * Only works client-side. Returns null if Firebase env vars are missing.
  */
-export function getFirebaseApp(): FirebaseApp {
-  if (typeof window === "undefined") {
-    throw new Error("getFirebaseApp() must only be called on the client side");
+export function getFirebaseApp(): FirebaseApp | null {
+  if (typeof window === "undefined") return null;
+
+  if (!isFirebaseConfigured()) {
+    console.warn("[Firebase] Missing env vars — Firebase features disabled");
+    return null;
   }
 
   if (!app) {
@@ -36,8 +44,10 @@ export function getFirebaseApp(): FirebaseApp {
  * Import firebase/auth dynamically to keep the initial bundle small.
  */
 export async function getFirebaseAuth() {
+  const app = getFirebaseApp();
+  if (!app) return null;
   const { getAuth } = await import("firebase/auth");
-  return getAuth(getFirebaseApp());
+  return getAuth(app);
 }
 
 /**
@@ -45,6 +55,8 @@ export async function getFirebaseAuth() {
  * Import firebase/firestore dynamically to keep the initial bundle small.
  */
 export async function getFirebaseFirestore() {
+  const app = getFirebaseApp();
+  if (!app) return null;
   const { getFirestore } = await import("firebase/firestore");
-  return getFirestore(getFirebaseApp());
+  return getFirestore(app);
 }

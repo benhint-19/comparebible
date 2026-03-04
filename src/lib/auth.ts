@@ -12,8 +12,10 @@ import { getFirebaseApp } from "./firebase";
  * Uses dynamic import to keep the auth module out of the initial bundle.
  */
 async function getAuth() {
+  const app = getFirebaseApp();
+  if (!app) throw new Error("Firebase is not configured");
   const { getAuth: _getAuth } = await import("firebase/auth");
-  return _getAuth(getFirebaseApp());
+  return _getAuth(app);
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +131,13 @@ export async function signOut(): Promise<void> {
 export async function onAuthStateChanged(
   callback: (user: { uid: string; email: string | null; displayName: string | null; isAnonymous: boolean } | null) => void,
 ): Promise<() => void> {
+  const { isFirebaseConfigured } = await import("./firebase");
+  if (!isFirebaseConfigured()) {
+    // Firebase not configured — call back with null and return a no-op unsubscribe
+    callback(null);
+    return () => {};
+  }
+
   const { onAuthStateChanged: _onAuth } = await import("firebase/auth");
   const auth = await getAuth();
 

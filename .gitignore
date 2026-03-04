@@ -50,3 +50,4 @@ ios/App/App/GoogleService-Info.plist
 public/workbox-*.js
 public/workbox-*.js.map
 public/swe-worker-*.js
+selah-release.jks
