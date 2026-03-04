@@ -96,20 +96,35 @@ export default function SettingsPage() {
                 preset.translationIds.length === parallelTranslations.length &&
                 preset.translationIds.every((id) => parallelTranslations.includes(id));
               return (
-                <button
+                <div
                   key={preset.id}
-                  onClick={() => setParallel(preset.translationIds)}
-                  className={`text-left rounded-lg px-3 py-2.5 border transition-colors ${
+                  className={`text-left rounded-lg border transition-colors ${
                     isActive
                       ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10"
-                      : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-[var(--color-accent)]/50"
+                      : "border-[var(--color-border)] bg-[var(--color-background)]"
                   }`}
                 >
-                  <span className="text-sm font-medium">{preset.name}</span>
-                  <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
-                    {preset.description}
-                  </p>
-                </button>
+                  <button
+                    onClick={() => setParallel(preset.translationIds)}
+                    className={`w-full text-left px-3 py-2.5 rounded-t-lg transition-colors ${
+                      !isActive ? "hover:border-[var(--color-accent)]/50" : ""
+                    }`}
+                  >
+                    <span className="text-sm font-medium">{preset.name}</span>
+                    <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                      {preset.description}
+                    </p>
+                  </button>
+                  <ul className="px-3 pb-2.5 space-y-1.5">
+                    {preset.explanations.map((ex) => (
+                      <li key={ex.id} className="text-xs text-[var(--color-muted-foreground)] leading-snug">
+                        <span className="font-semibold text-[var(--color-foreground)]">{ex.id.replace("bolls:", "").replace("eng_", "").toUpperCase()}</span>
+                        {" — "}
+                        {ex.why}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               );
             })}
           </div>
