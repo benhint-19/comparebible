@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslationStore } from "@/store/translationStore";
-import { translationProfiles } from "@/lib/quiz/translations";
+import { translationPresets } from "@/lib/bible/presets";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import PersonaSettings from "@/components/ai/PersonaSettings";
+import TranslationSelect, { getAllTranslations } from "@/components/ui/TranslationSelect";
 
 export default function SettingsPage() {
   const { fontSize, setFontSize, quizCompleted } = useSettingsStore();
@@ -14,19 +14,12 @@ export default function SettingsPage() {
     primaryTranslation,
     parallelTranslations,
     setPrimary,
+    setParallel,
     addParallel,
     removeParallel,
   } = useTranslationStore();
 
-  const [showTranslationPicker, setShowTranslationPicker] = useState(false);
-
-  const getPrimaryName = () => {
-    return translationProfiles.find((t) => t.id === primaryTranslation)?.name ?? primaryTranslation;
-  };
-
-  const getTranslationName = (id: string) => {
-    return translationProfiles.find((t) => t.id === id)?.name ?? id;
-  };
+  const allTranslations = getAllTranslations();
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
@@ -83,15 +76,43 @@ export default function SettingsPage() {
           <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
             The main English interpretation you read. Different translators render the original Hebrew and Greek texts with different priorities — some prioritize literal accuracy, others readability.
           </p>
-          <select
+          <TranslationSelect
+            mode="single"
             value={primaryTranslation}
-            onChange={(e) => setPrimary(e.target.value)}
-            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-foreground)] px-3 py-2 text-sm"
-          >
-            {translationProfiles.map((t) => (
-              <option key={t.id} value={t.id}>{t.name} ({t.id})</option>
-            ))}
-          </select>
+            onChange={setPrimary}
+            translations={allTranslations}
+          />
+        </section>
+
+        {/* Translation Presets */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">Translation Presets</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Quick-start groupings — click one to set your parallel translations.
+          </p>
+          <div className="grid gap-2">
+            {translationPresets.map((preset) => {
+              const isActive =
+                preset.translationIds.length === parallelTranslations.length &&
+                preset.translationIds.every((id) => parallelTranslations.includes(id));
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => setParallel(preset.translationIds)}
+                  className={`text-left rounded-lg px-3 py-2.5 border transition-colors ${
+                    isActive
+                      ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10"
+                      : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-[var(--color-accent)]/50"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{preset.name}</span>
+                  <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                    {preset.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {/* Parallel Translations */}
@@ -101,47 +122,16 @@ export default function SettingsPage() {
             Shown when you tap a verse. Compare how different translators interpreted the same passage.
           </p>
 
-          {/* Current parallels */}
-          <div className="space-y-2 mb-3">
-            {parallelTranslations.map((id) => (
-              <div key={id} className="flex items-center justify-between rounded-lg bg-[var(--color-background)] px-3 py-2 border border-[var(--color-border)]">
-                <span className="text-sm font-medium">{getTranslationName(id)}</span>
-                <button
-                  onClick={() => removeParallel(id)}
-                  className="text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            {parallelTranslations.length === 0 && (
-              <p className="text-sm text-[var(--color-muted-foreground)] italic">No parallel translations selected</p>
-            )}
-          </div>
-
-          {/* Add button */}
-          <button
-            onClick={() => setShowTranslationPicker(!showTranslationPicker)}
-            className="text-sm text-[var(--color-accent)] hover:underline"
-          >
-            {showTranslationPicker ? "Hide list" : "+ Add translation"}
-          </button>
-
-          {showTranslationPicker && (
-            <div className="mt-3 space-y-1 max-h-48 overflow-y-auto">
-              {translationProfiles
-                .filter((t) => t.id !== primaryTranslation && !parallelTranslations.includes(t.id))
-                .map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => addParallel(t.id)}
-                    className="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-[var(--color-background)] transition-colors"
-                  >
-                    {t.name} <span className="text-[var(--color-muted-foreground)]">({t.id})</span>
-                  </button>
-                ))}
-            </div>
-          )}
+          <TranslationSelect
+            mode="multi"
+            value={parallelTranslations}
+            onChange={(id, checked) => {
+              if (checked) addParallel(id);
+              else removeParallel(id);
+            }}
+            translations={allTranslations}
+            placeholder="Search to add or remove..."
+          />
         </section>
 
         {/* AI Perspectives */}

@@ -60,11 +60,20 @@ export default function VerseOfDay() {
 
   const handleDigDeeper = () => {
     navigateTo(votd.bookId, votd.chapter);
-    // Small delay so chapter loads, then expand the verse
-    setTimeout(() => {
-      toggleVerseExpanded(votd.verse);
-    }, 100);
     setDismissed(true);
+    // Wait for chapter to load, then expand and scroll to the verse
+    const tryScrollAndExpand = (attempts: number) => {
+      const verseEl = document.querySelector(`[data-verse="${votd.verse}"]`);
+      if (verseEl) {
+        toggleVerseExpanded(votd.verse);
+        verseEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        verseEl.classList.add("ring-2", "ring-[var(--accent)]", "rounded");
+        setTimeout(() => verseEl.classList.remove("ring-2", "ring-[var(--accent)]", "rounded"), 3000);
+      } else if (attempts > 0) {
+        setTimeout(() => tryScrollAndExpand(attempts - 1), 300);
+      }
+    };
+    setTimeout(() => tryScrollAndExpand(10), 500);
   };
 
   return (

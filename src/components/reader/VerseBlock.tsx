@@ -2,8 +2,10 @@
 
 import { useMemo } from "react";
 import { useReaderStore } from "@/store/readerStore";
+import { useNotesStore } from "@/store/notesStore";
 import type { ChapterVerse, VerseContentItem } from "@/lib/bible/types";
 import ParallelVerses from "@/components/reader/ParallelVerses";
+import VerseNote from "@/components/reader/VerseNote";
 
 interface VerseBlockProps {
   verse: ChapterVerse;
@@ -31,6 +33,7 @@ export default function VerseBlock({
 }: VerseBlockProps) {
   const toggleVerseExpanded = useReaderStore((s) => s.toggleVerseExpanded);
   const isExpanded = useReaderStore((s) => s.expandedVerses.has(verseNumber));
+  const hasNote = useNotesStore((s) => s.hasNote(bookId, chapter, verseNumber));
 
   const plainText = useMemo(() => {
     return verse.content
@@ -45,13 +48,19 @@ export default function VerseBlock({
   }, [verse.content]);
 
   return (
-    <div className="group">
+    <div className="group" data-verse={verseNumber}>
       <p
         onClick={() => toggleVerseExpanded(verseNumber)}
         className="cursor-pointer rounded px-1 py-0.5 leading-relaxed transition-colors hover:bg-[var(--muted)] sm:px-2 sm:py-1"
       >
         <sup className="mr-1 text-xs font-semibold text-[var(--accent)] select-none">
           {verseNumber}
+          {hasNote && (
+            <span
+              className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-500/80 align-super"
+              title="Has note"
+            />
+          )}
         </sup>
         {verse.content.map(renderContentItem)}
       </p>
@@ -59,12 +68,19 @@ export default function VerseBlock({
       <div className={`verse-content ${isExpanded ? "verse-expanded" : ""}`}>
         <div>
           {isExpanded && (
-            <ParallelVerses
-              bookId={bookId}
-              chapter={chapter}
-              verseNumber={verseNumber}
-              verseText={plainText}
-            />
+            <>
+              <ParallelVerses
+                bookId={bookId}
+                chapter={chapter}
+                verseNumber={verseNumber}
+                verseText={plainText}
+              />
+              <VerseNote
+                bookId={bookId}
+                chapter={chapter}
+                verseNumber={verseNumber}
+              />
+            </>
           )}
         </div>
       </div>

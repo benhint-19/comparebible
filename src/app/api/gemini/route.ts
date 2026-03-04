@@ -8,9 +8,12 @@ import { getPersona } from "@/lib/ai/personas";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   if (!apiKey) {
-    return new Response("GEMINI_API_KEY is not configured", { status: 500 });
+    return new Response(
+      "GEMINI_API_KEY is not configured. Add it to your Vercel Environment Variables (Settings → Environment Variables → GEMINI_API_KEY).",
+      { status: 500 },
+    );
   }
 
   let body: { persona?: string; passage?: string; verseText?: string };
