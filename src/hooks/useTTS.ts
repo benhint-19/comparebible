@@ -42,10 +42,12 @@ function pickVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useTTS() {
+export function useTTS(rate: number = 1) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const rateRef = useRef(rate);
+  rateRef.current = rate;
 
   const voiceStore = useVoiceStore();
 
@@ -76,7 +78,7 @@ export function useTTS() {
   }, []);
 
   const speak = useCallback(
-    (text: string) => {
+    (text: string, onEnd?: () => void) => {
       const synth = getSynthesis();
       if (!synth) return;
 
@@ -84,7 +86,7 @@ export function useTTS() {
       synth.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1;
+      utterance.rate = rateRef.current;
       utterance.pitch = 1;
 
       const voice = pickVoice(synth);
@@ -99,6 +101,7 @@ export function useTTS() {
         setIsSpeaking(false);
         voiceStore.setSpeaking(false);
         utteranceRef.current = null;
+        onEnd?.();
       };
 
       utterance.onerror = (event) => {

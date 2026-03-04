@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslationStore } from "@/store/translationStore";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, type AuthUser } from "@/store/authStore";
 import { translationPresets } from "@/lib/bible/presets";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import PersonaSettings from "@/components/ai/PersonaSettings";
@@ -172,6 +172,49 @@ export default function SettingsPage() {
           <PushToggle />
         </section>
 
+        {/* Voice Commands */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">Voice Commands (Audio Mode)</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-4">
+            CompareBible includes an audiobook mode that reads Bible chapters aloud.
+            While listening, you can use voice commands to control playback and explore passages.
+          </p>
+
+          <div className="space-y-4 text-sm">
+            <div>
+              <h3 className="font-medium text-[var(--color-foreground)] mb-1.5">Playback</h3>
+              <ul className="space-y-1 text-[var(--color-muted-foreground)]">
+                <li>&ldquo;Pause&rdquo; or &ldquo;Stop&rdquo; &mdash; Pause reading</li>
+                <li>&ldquo;Play&rdquo; or &ldquo;Continue&rdquo; &mdash; Resume reading</li>
+                <li>&ldquo;Repeat&rdquo; &mdash; Read the current verse again</li>
+                <li>&ldquo;Next verse&rdquo; or &ldquo;Skip&rdquo; &mdash; Jump ahead</li>
+                <li>&ldquo;Previous verse&rdquo; or &ldquo;Go back&rdquo; &mdash; Go back one verse</li>
+                <li>&ldquo;Next chapter&rdquo; &mdash; Move to the next chapter</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-[var(--color-foreground)] mb-1.5">Exploration</h3>
+              <ul className="space-y-1 text-[var(--color-muted-foreground)]">
+                <li>&ldquo;Analyze this&rdquo; or &ldquo;Go deeper&rdquo; &mdash; Open AI analysis for the current verse</li>
+                <li>&ldquo;What does this mean?&rdquo; &mdash; Same as above</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-[var(--color-foreground)] mb-1.5">Navigation</h3>
+              <ul className="space-y-1 text-[var(--color-muted-foreground)]">
+                <li>&ldquo;Go to John 3&rdquo; &mdash; Navigate to a specific chapter</li>
+                <li>&ldquo;Go to Romans 8:28&rdquo; &mdash; Navigate to a specific verse</li>
+              </ul>
+            </div>
+
+            <p className="text-[var(--color-muted-foreground)]">
+              &ldquo;Exit audio mode&rdquo; &mdash; Turn off audiobook mode
+            </p>
+          </div>
+        </section>
+
         {/* Quiz */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">Translation Quiz</h2>
@@ -187,90 +230,12 @@ export default function SettingsPage() {
         </section>
 
         {/* Account & Sync */}
-        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-          <h2 className="font-medium mb-2">Account & Sync</h2>
-          {authLoading ? (
-            <p className="text-sm text-[var(--color-muted-foreground)]">Loading...</p>
-          ) : user ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-sm text-[var(--color-muted-foreground)]">Sync is active</span>
-              </div>
-              <p className="text-sm">
-                {user.isAnonymous
-                  ? "Signed in anonymously"
-                  : user.displayName || user.email || "Signed in"}
-              </p>
-              {user.email && !user.isAnonymous && (
-                <p className="text-xs text-[var(--color-muted-foreground)]">{user.email}</p>
-              )}
-              <button
-                disabled={authBusy}
-                onClick={async () => {
-                  setAuthBusy(true);
-                  try {
-                    const { signOut } = await import("@/lib/auth");
-                    await signOut();
-                  } catch (err) {
-                    console.error("Sign out failed:", err);
-                  } finally {
-                    setAuthBusy(false);
-                  }
-                }}
-                className="text-sm text-red-500 hover:underline disabled:opacity-50"
-              >
-                {authBusy ? "Signing out..." : "Sign out"}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-[var(--color-muted-foreground)]">
-                Sign in to sync your settings, notes, and reading position across devices.
-              </p>
-              <button
-                disabled={authBusy}
-                onClick={async () => {
-                  setAuthBusy(true);
-                  try {
-                    const { signInWithGoogle } = await import("@/lib/auth");
-                    await signInWithGoogle();
-                  } catch (err) {
-                    console.error("Google sign-in failed:", err);
-                  } finally {
-                    setAuthBusy(false);
-                  }
-                }}
-                className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2.5 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors disabled:opacity-50"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                {authBusy ? "Signing in..." : "Sign in with Google"}
-              </button>
-              <button
-                disabled={authBusy}
-                onClick={async () => {
-                  setAuthBusy(true);
-                  try {
-                    const { signInAnonymously } = await import("@/lib/auth");
-                    await signInAnonymously();
-                  } catch (err) {
-                    console.error("Anonymous sign-in failed:", err);
-                  } finally {
-                    setAuthBusy(false);
-                  }
-                }}
-                className="block text-sm text-[var(--color-accent)] hover:underline disabled:opacity-50"
-              >
-                {authBusy ? "Signing in..." : "Continue anonymously"}
-              </button>
-            </div>
-          )}
-        </section>
+        <AccountSyncSection
+          user={user}
+          authLoading={authLoading}
+          authBusy={authBusy}
+          setAuthBusy={setAuthBusy}
+        />
 
         {/* About */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
@@ -282,5 +247,291 @@ export default function SettingsPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Account & Sync section — extracted for readability
+// ---------------------------------------------------------------------------
+
+function AccountSyncSection({
+  user,
+  authLoading,
+  authBusy,
+  setAuthBusy,
+}: {
+  user: AuthUser | null;
+  authLoading: boolean;
+  authBusy: boolean;
+  setAuthBusy: (v: boolean) => void;
+}) {
+  const [emailMode, setEmailMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
+
+  /** Map Firebase error codes to user-friendly messages. */
+  function friendlyError(err: unknown): string {
+    const code =
+      err && typeof err === "object" && "code" in err
+        ? (err as { code: string }).code
+        : "";
+    switch (code) {
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/user-disabled":
+        return "This account has been disabled.";
+      case "auth/user-not-found":
+        return "No account found with this email.";
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        return "Incorrect password. Please try again.";
+      case "auth/email-already-in-use":
+        return "An account with this email already exists. Try signing in instead.";
+      case "auth/weak-password":
+        return "Password must be at least 6 characters.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait a moment and try again.";
+      case "auth/popup-closed-by-user":
+        return "Sign-in popup was closed. Please try again.";
+      default:
+        return "Something went wrong. Please try again.";
+    }
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthBusy(true);
+    try {
+      if (emailMode === "sign-up") {
+        const { signUpWithEmail } = await import("@/lib/auth");
+        await signUpWithEmail(email, password);
+      } else {
+        const { signInWithEmail } = await import("@/lib/auth");
+        await signInWithEmail(email, password);
+      }
+    } catch (err) {
+      console.error("Email auth failed:", err);
+      setAuthError(friendlyError(err));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setAuthError("Enter your email address first, then tap Forgot Password.");
+      return;
+    }
+    setAuthError(null);
+    setAuthBusy(true);
+    try {
+      const { resetPassword } = await import("@/lib/auth");
+      await resetPassword(email);
+      setResetSent(true);
+    } catch (err) {
+      console.error("Password reset failed:", err);
+      setAuthError(friendlyError(err));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+      <h2 className="font-medium mb-2">Account & Sync</h2>
+
+      {authLoading ? (
+        <p className="text-sm text-[var(--color-muted-foreground)]">Loading...</p>
+      ) : user ? (
+        /* ---- Signed-in state ---- */
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-sm text-[var(--color-muted-foreground)]">Sync is active</span>
+          </div>
+          <p className="text-sm">
+            {user.isAnonymous
+              ? "Signed in anonymously"
+              : user.displayName || user.email || "Signed in"}
+          </p>
+          {user.email && !user.isAnonymous && (
+            <p className="text-xs text-[var(--color-muted-foreground)]">{user.email}</p>
+          )}
+          <button
+            disabled={authBusy}
+            onClick={async () => {
+              setAuthBusy(true);
+              try {
+                const { signOut } = await import("@/lib/auth");
+                await signOut();
+              } catch (err) {
+                console.error("Sign out failed:", err);
+              } finally {
+                setAuthBusy(false);
+              }
+            }}
+            className="text-sm text-red-500 hover:underline disabled:opacity-50"
+          >
+            {authBusy ? "Signing out..." : "Sign out"}
+          </button>
+        </div>
+      ) : (
+        /* ---- Signed-out state ---- */
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Sign in to sync your settings, notes, and reading position across devices.
+          </p>
+
+          {/* Email form */}
+          <form onSubmit={handleEmailSubmit} className="space-y-3">
+            <input
+              type="email"
+              placeholder="Email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
+            />
+
+            {authError && (
+              <p className="text-sm text-red-500">{authError}</p>
+            )}
+            {resetSent && (
+              <p className="text-sm text-green-600">Password reset email sent. Check your inbox.</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={authBusy}
+              className="w-full rounded-lg bg-[var(--color-accent)] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {authBusy
+                ? "Please wait..."
+                : emailMode === "sign-up"
+                  ? "Create Account"
+                  : "Sign In"}
+            </button>
+
+            <div className="flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError(null);
+                  setResetSent(false);
+                  setEmailMode(emailMode === "sign-in" ? "sign-up" : "sign-in");
+                }}
+                className="text-[var(--color-accent)] hover:underline"
+              >
+                {emailMode === "sign-in" ? "Create Account" : "Already have an account? Sign In"}
+              </button>
+              {emailMode === "sign-in" && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={authBusy}
+                  className="text-[var(--color-muted-foreground)] hover:underline disabled:opacity-50"
+                >
+                  Forgot Password?
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--color-border)]" />
+            <span className="text-xs text-[var(--color-muted-foreground)]">or continue with</span>
+            <div className="h-px flex-1 bg-[var(--color-border)]" />
+          </div>
+
+          {/* Google & Apple side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Google */}
+            <button
+              disabled={authBusy}
+              onClick={async () => {
+                setAuthError(null);
+                setAuthBusy(true);
+                try {
+                  const { signInWithGoogle } = await import("@/lib/auth");
+                  await signInWithGoogle();
+                } catch (err) {
+                  console.error("Google sign-in failed:", err);
+                  setAuthError(friendlyError(err));
+                } finally {
+                  setAuthBusy(false);
+                }
+              }}
+              className="flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors disabled:opacity-50"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Google
+            </button>
+
+            {/* Apple */}
+            <button
+              disabled={authBusy}
+              onClick={async () => {
+                setAuthError(null);
+                setAuthBusy(true);
+                try {
+                  const { signInWithApple } = await import("@/lib/auth");
+                  await signInWithApple();
+                } catch (err) {
+                  console.error("Apple sign-in failed:", err);
+                  setAuthError(friendlyError(err));
+                } finally {
+                  setAuthBusy(false);
+                }
+              }}
+              className="flex items-center justify-center gap-2 rounded-lg bg-black px-3 py-2.5 text-sm font-medium text-white hover:bg-black/90 transition-colors disabled:opacity-50"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+              </svg>
+              Apple
+            </button>
+          </div>
+
+          {/* Anonymous */}
+          <button
+            disabled={authBusy}
+            onClick={async () => {
+              setAuthError(null);
+              setAuthBusy(true);
+              try {
+                const { signInAnonymously } = await import("@/lib/auth");
+                await signInAnonymously();
+              } catch (err) {
+                console.error("Anonymous sign-in failed:", err);
+                setAuthError(friendlyError(err));
+              } finally {
+                setAuthBusy(false);
+              }
+            }}
+            className="block w-full text-center text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:underline disabled:opacity-50 transition-colors"
+          >
+            Continue without account
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

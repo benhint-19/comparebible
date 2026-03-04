@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useReaderStore } from "@/store/readerStore";
 import { useTranslationStore } from "@/store/translationStore";
 import { fetchChapter } from "@/lib/bible/api";
@@ -9,6 +9,7 @@ import type { ChapterResponse, ChapterElement } from "@/lib/bible/types";
 import VerseBlock from "@/components/reader/VerseBlock";
 import AIPerspectiveButton from "@/components/ai/AIPerspectiveButton";
 import { extractSimpleVerses } from "@/lib/bible/api";
+import { useAudioMode } from "@/hooks/useAudioMode";
 
 export default function ChapterView() {
   const currentBook = useReaderStore((s) => s.currentBook);
@@ -45,6 +46,15 @@ export default function ChapterView() {
       cancelled = true;
     };
   }, [primaryTranslation, currentBook, currentChapter]);
+
+  // Extract simple verses for audio mode
+  const simpleVerses = useMemo(() => {
+    if (!chapterData) return [];
+    return extractSimpleVerses(chapterData);
+  }, [chapterData]);
+
+  // Audio mode orchestration
+  useAudioMode(simpleVerses);
 
   if (loading) {
     return (

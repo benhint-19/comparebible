@@ -6,6 +6,7 @@ import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { useTTS } from "@/hooks/useTTS";
 import { parseVoiceCommand, type VoiceCommand } from "@/lib/voice/commands";
 import { useReaderStore } from "@/store/readerStore";
+import { useAudioStore } from "@/store/audioStore";
 import type { ParsedBibleReference } from "@/lib/voice/references";
 
 // ---------------------------------------------------------------------------
@@ -25,23 +26,31 @@ export function useVoiceCommands() {
 
   const { speak } = useTTS();
   const navigateTo = useReaderStore((s) => s.navigateTo);
+  const audioMode = useAudioStore((s) => s.audioMode);
 
   const [lastCommand, setLastCommand] = useState<VoiceCommand | null>(null);
 
   // Track the previous listening state so we can detect the transition
-  // from listening → not listening (i.e. final transcript is ready).
+  // from listening -> not listening (i.e. final transcript is ready).
   const wasListeningRef = useRef(false);
 
   useEffect(() => {
+    // When in audio mode, the useAudioMode hook handles command dispatch.
+    // This hook only processes commands when audio mode is OFF.
+    if (audioMode) {
+      wasListeningRef.current = isListening;
+      return;
+    }
+
     // Detect the moment recognition stops (final result available)
     if (wasListeningRef.current && !isListening && transcript) {
-      const command = parseVoiceCommand(transcript);
+      const command = parseVoiceCommand(transcript, false);
       setLastCommand(command);
       dispatch(command);
     }
     wasListeningRef.current = isListening;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening, transcript]);
+  }, [isListening, transcript, audioMode]);
 
   const dispatch = useCallback(
     (command: VoiceCommand) => {

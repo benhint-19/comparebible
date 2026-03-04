@@ -14,6 +14,17 @@ export type VoiceCommandType =
   | "compare"
   | "perspective"
   | "quiz"
+  // Audio-mode specific commands
+  | "audio_pause"
+  | "audio_play"
+  | "audio_stop"
+  | "audio_next_verse"
+  | "audio_prev_verse"
+  | "audio_next_chapter"
+  | "audio_prev_chapter"
+  | "audio_repeat"
+  | "audio_analyze"
+  | "audio_exit"
   | "unknown";
 
 export interface VoiceCommand {
@@ -32,6 +43,72 @@ interface IntentPattern {
   /** Extract a payload string from the match (group 1 by default). */
   extractPayload?: (match: RegExpMatchArray) => string | undefined;
 }
+
+// ---------------------------------------------------------------------------
+// Audio-mode patterns (checked first when audio mode is active)
+// ---------------------------------------------------------------------------
+
+const AUDIO_INTENT_PATTERNS: IntentPattern[] = [
+  // Pause / stop playback
+  {
+    type: "audio_pause",
+    pattern: /^(?:pause|stop|stop\s+reading|pause\s+reading|hold\s+on|wait)$/,
+  },
+
+  // Resume / play
+  {
+    type: "audio_play",
+    pattern:
+      /^(?:play|continue|resume|keep\s+reading|keep\s+going|go\s+on|start\s+reading|continue\s+reading|resume\s+reading)$/,
+  },
+
+  // Exit audio mode entirely
+  {
+    type: "audio_exit",
+    pattern:
+      /^(?:exit\s+audio(?:\s+mode)?|stop\s+listening|turn\s+off\s+audio|quit\s+audio|close\s+audio|exit)$/,
+  },
+
+  // Analyze / go deeper
+  {
+    type: "audio_analyze",
+    pattern:
+      /^(?:analyze\s+this|analyse\s+this|go\s+deeper|what\s+does\s+this\s+mean|explain\s+this|tell\s+me\s+more|what\s+does\s+that\s+mean)$/,
+  },
+
+  // Next chapter
+  {
+    type: "audio_next_chapter",
+    pattern: /^(?:next\s+chapter|skip\s+chapter|forward\s+chapter)$/,
+  },
+
+  // Previous chapter
+  {
+    type: "audio_prev_chapter",
+    pattern:
+      /^(?:previous\s+chapter|prev\s+chapter|last\s+chapter|back\s+(?:a\s+)?chapter|go\s+back\s+(?:a\s+)?chapter)$/,
+  },
+
+  // Repeat current verse
+  {
+    type: "audio_repeat",
+    pattern:
+      /^(?:repeat|read\s+(?:that\s+)?again|say\s+(?:that\s+)?again|repeat\s+(?:that|this)(?:\s+verse)?)$/,
+  },
+
+  // Next verse / skip
+  {
+    type: "audio_next_verse",
+    pattern: /^(?:skip|next|next\s+verse|skip\s+verse|forward)$/,
+  },
+
+  // Previous verse
+  {
+    type: "audio_prev_verse",
+    pattern:
+      /^(?:go\s+back|previous\s+verse|prev\s+verse|back\s+(?:one|a\s+verse)|last\s+verse|previous)$/,
+  },
+];
 
 const INTENT_PATTERNS: IntentPattern[] = [
   // ---- read aloud (must come before navigate "read [ref]") ----
@@ -85,11 +162,25 @@ const INTENT_PATTERNS: IntentPattern[] = [
  *
  * Case-insensitive. Leading/trailing whitespace is stripped. Returns
  * `{ type: 'unknown' }` when no intent can be determined.
+ *
+ * When `audioMode` is true, audio-specific commands are checked first.
  */
-export function parseVoiceCommand(transcript: string): VoiceCommand {
+export function parseVoiceCommand(
+  transcript: string,
+  audioMode = false,
+): VoiceCommand {
   const input = transcript.trim().toLowerCase();
 
   if (!input) return { type: "unknown" };
+
+  // In audio mode, check audio-specific patterns first
+  if (audioMode) {
+    for (const intent of AUDIO_INTENT_PATTERNS) {
+      const match = input.match(intent.pattern);
+      if (!match) continue;
+      return { type: intent.type };
+    }
+  }
 
   for (const intent of INTENT_PATTERNS) {
     const match = input.match(intent.pattern);
