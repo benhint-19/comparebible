@@ -255,7 +255,8 @@ export default function SettingsPage() {
             Selah - Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore AI-powered analysis from multiple scholarly perspectives.
             Bible text from bible.helloao.org. AI analysis powered by Google Gemini.
           </p>
-          <div className="flex gap-4 text-sm">
+          <div className="flex flex-wrap gap-4 text-sm">
+            <Link href="/support" className="text-[var(--color-accent)] hover:underline">Support</Link>
             <Link href="/privacy" className="text-[var(--color-accent)] hover:underline">Privacy Policy</Link>
             <Link href="/terms" className="text-[var(--color-accent)] hover:underline">Terms of Service</Link>
           </div>

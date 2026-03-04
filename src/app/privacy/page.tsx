@@ -121,8 +121,8 @@ export default function PrivacyPage() {
           <h2 className="text-base font-semibold">7. Contact</h2>
           <p>
             Questions or requests regarding your data? Email us at{" "}
-            <a href="mailto:privacy@selahbible.app" className="text-[var(--color-accent)] hover:underline">
-              privacy@selahbible.app
+            <a href="mailto:twototangodev@gmail.com" className="text-[var(--color-accent)] hover:underline">
+              twototangodev@gmail.com
             </a>.
           </p>
         </section>

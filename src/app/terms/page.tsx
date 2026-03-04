@@ -113,8 +113,8 @@ export default function TermsPage() {
           <h2 className="text-base font-semibold">10. Contact</h2>
           <p>
             Questions about these terms? Email us at{" "}
-            <a href="mailto:hello@selahbible.app" className="text-[var(--color-accent)] hover:underline">
-              hello@selahbible.app
+            <a href="mailto:twototangodev@gmail.com" className="text-[var(--color-accent)] hover:underline">
+              twototangodev@gmail.com
             </a>.
           </p>
         </section>

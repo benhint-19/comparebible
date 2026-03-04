@@ -28,7 +28,7 @@ export default function DeleteAccountPage() {
           "For security, Firebase requires a recent sign-in before deleting your account. Please sign out, sign back in, then try again."
         );
       } else {
-        setError("Something went wrong. Please try again or contact us at privacy@selahbible.app.");
+        setError("Something went wrong. Please try again or contact us at twototangodev@gmail.com.");
       }
       setStep("error");
     }
