@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: "Selah - Parallel Bible Audio & Perspectives",
   description: "Listen to and compare Bible translations side-by-side with AI-powered scholarly perspectives",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

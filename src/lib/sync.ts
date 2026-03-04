@@ -92,6 +92,34 @@ export async function writeAllNotes(uid: string, notes: Record<string, VerseNote
   await batch.commit();
 }
 
+// ---- Delete all user data ---- //
+
+export async function deleteAllUserData(uid: string): Promise<void> {
+  const { deleteDoc, getDocs } = await import("firebase/firestore");
+
+  // Delete settings docs
+  const settingsPaths = [
+    `users/${uid}/settings/prefs`,
+    `users/${uid}/settings/translations`,
+    `users/${uid}/settings/reader`,
+  ];
+  await Promise.all(
+    settingsPaths.map(async (p) => {
+      const ref = await firestoreDoc(p);
+      await deleteDoc(ref);
+    }),
+  );
+
+  // Delete all notes
+  const notesCol = await firestoreCollection(`users/${uid}/notes`);
+  const notesSnap = await getDocs(notesCol);
+  await Promise.all(
+    notesSnap.docs.map(async (d) => {
+      await deleteDoc(d.ref);
+    }),
+  );
+}
+
 // ---- Read functions (initial pull on sign-in) ---- //
 
 export async function readSettings(uid: string): Promise<SyncedSettings | null> {

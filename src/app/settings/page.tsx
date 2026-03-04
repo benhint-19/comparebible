@@ -251,10 +251,14 @@ export default function SettingsPage() {
         {/* About */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">About</h2>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
             Selah - Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore AI-powered analysis from multiple scholarly perspectives.
             Bible text from bible.helloao.org. AI analysis powered by Google Gemini.
           </p>
+          <div className="flex gap-4 text-sm">
+            <Link href="/privacy" className="text-[var(--color-accent)] hover:underline">Privacy Policy</Link>
+            <Link href="/terms" className="text-[var(--color-accent)] hover:underline">Terms of Service</Link>
+          </div>
         </section>
       </main>
     </div>
@@ -388,6 +392,12 @@ function AccountSyncSection({
           >
             {authBusy ? "Signing out..." : "Sign out"}
           </button>
+          <Link
+            href="/delete-account"
+            className="block text-sm text-[var(--color-muted-foreground)] hover:text-red-500 hover:underline transition-colors"
+          >
+            Delete account
+          </Link>
         </div>
       ) : (
         /* ---- Signed-out state ---- */

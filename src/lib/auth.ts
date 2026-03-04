@@ -112,6 +112,33 @@ export async function signInAnonymously(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Delete account
+// ---------------------------------------------------------------------------
+
+/**
+ * Delete the current user's Firestore data and then their Firebase Auth account.
+ * Throws auth/requires-recent-login if the session is too old.
+ */
+export async function deleteUserAccount(): Promise<void> {
+  const { deleteUser } = await import("firebase/auth");
+  const auth = await getAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error("No user is signed in");
+
+  // Delete synced Firestore data first
+  try {
+    const sync = await import("./sync");
+    await sync.deleteAllUserData(user.uid);
+  } catch (err) {
+    console.warn("[Auth] Failed to delete Firestore data:", err);
+    // Continue with account deletion even if Firestore cleanup fails
+  }
+
+  // Delete the Firebase Auth account (may throw requires-recent-login)
+  await deleteUser(user);
+}
+
+// ---------------------------------------------------------------------------
 // Sign out & auth state
 // ---------------------------------------------------------------------------
 
