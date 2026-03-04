@@ -70,6 +70,37 @@ export async function fetchChapter(
   const cached = await getCachedChapter(translationId, bookId, chapter);
   if (cached) return cached;
 
+  // Route Bolls translations (bolls:NIV, etc.) to the Bolls.life adapter
+  if (translationId.startsWith("bolls:")) {
+    const { fetchBollsChapter } = await import("./bolls");
+    const verses = await fetchBollsChapter(translationId, bookId, chapter);
+    const bollsName = translationId.replace("bolls:", "");
+    // Build a ChapterResponse-compatible object from Bolls data.
+    // Only the fields the reader actually uses are populated.
+    const data = {
+      translation: { id: translationId, name: bollsName, shortName: bollsName, englishName: bollsName, language: "English", languageName: "English", languageEnglishName: "English", textDirection: "ltr", website: "", licenseUrl: "", sha256: "", availableFormats: [], listOfBooksApiLink: "", completeTranslationApiLink: "", numberOfBooks: 66, totalNumberOfChapters: 0, totalNumberOfVerses: 0 },
+      book: { id: bookId, translationId, name: bookId, commonName: bookId, title: bookId, order: 0, numberOfChapters: 0, sha256: "", firstChapterNumber: 1, firstChapterApiLink: "", lastChapterNumber: 0, lastChapterApiLink: "", totalNumberOfVerses: 0 },
+      chapter: {
+        number: chapter,
+        content: verses.map((v) => ({
+          type: "verse" as const,
+          number: v.number,
+          content: [v.text],
+        })),
+        footnotes: [],
+      },
+      thisChapterLink: "",
+      thisChapterAudioLinks: {},
+      nextChapterApiLink: null,
+      nextChapterAudioLinks: null,
+      previousChapterApiLink: null,
+      previousChapterAudioLinks: null,
+      numberOfVerses: verses.length,
+    } satisfies ChapterResponse;
+    await cacheChapter(translationId, bookId, chapter, data);
+    return data;
+  }
+
   const data: ChapterResponse = await fetchJSON(
     `${BASE_URL}/api/${encodeURIComponent(translationId)}/${encodeURIComponent(bookId)}/${chapter}.json`,
   );
