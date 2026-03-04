@@ -77,7 +77,7 @@ export default function BookPicker() {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={close}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]" onClick={close}>
           <div className="absolute inset-0 bg-black/50" />
           <div
             className="relative w-full max-w-md max-h-[80vh] flex flex-col rounded-xl shadow-2xl overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] border border-[var(--color-border)]"

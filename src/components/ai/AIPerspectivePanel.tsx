@@ -43,7 +43,7 @@ export default function AIPerspectivePanel() {
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-[var(--border)]">
           <h2 className="text-base font-semibold text-[var(--foreground)]">
             AI Perspectives
           </h2>

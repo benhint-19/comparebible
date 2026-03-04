@@ -53,7 +53,8 @@ export async function registerForPush(preferredHour: number = 8): Promise<string
 
   // Send to our API
   try {
-    await fetch("/api/push/register", {
+    const { API_BASE_URL } = await import("@/lib/apiBase");
+    await fetch(`${API_BASE_URL}/api/push/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, platform, timezone, preferredHour }),

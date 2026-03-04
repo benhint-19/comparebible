@@ -11,7 +11,7 @@ function SearchPageContent() {
   const query = searchParams.get("q") ?? "";
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {/* Header with back button */}
       <div className="mb-6 flex items-center gap-3">
         <button

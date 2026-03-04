@@ -13,7 +13,8 @@ export default function SupportPage() {
     e.preventDefault();
     setStatus("sending");
     try {
-      const res = await fetch("/api/support", {
+      const { API_BASE_URL } = await import("@/lib/apiBase");
+      const res = await fetch(`${API_BASE_URL}/api/support`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message }),
@@ -30,7 +31,7 @@ export default function SupportPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 backdrop-blur-sm px-4">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 backdrop-blur-sm px-4 pt-[env(safe-area-inset-top)]">
         <Link
           href="/settings"
           className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"

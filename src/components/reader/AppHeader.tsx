@@ -35,7 +35,7 @@ export default function AppHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 backdrop-blur-sm pt-[env(safe-area-inset-top)]">
         <div className="flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
           {/* Left: BookPicker trigger */}
           <div className="flex items-center min-w-0">
@@ -88,7 +88,7 @@ export default function AppHeader() {
             </button>
             <Link
               href="/notes"
-              className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors hidden sm:block"
+              className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
               aria-label="Notes"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
