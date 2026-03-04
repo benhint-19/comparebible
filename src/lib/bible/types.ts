@@ -102,17 +102,23 @@ export interface AudioLinks {
   [reader: string]: string;
 }
 
+export interface ChapterData {
+  number: number;
+  content: ChapterElement[];
+  footnotes?: Footnote[];
+}
+
 export interface ChapterResponse {
   translation: Translation;
   book: Book;
-  chapter: ChapterElement[];
+  chapter: ChapterData;
   thisChapterLink: string;
   thisChapterAudioLinks: AudioLinks;
   nextChapterApiLink: string | null;
   nextChapterAudioLinks: AudioLinks | null;
   previousChapterApiLink: string | null;
   previousChapterAudioLinks: AudioLinks | null;
-  footnotes?: Footnote[];
+  numberOfVerses: number;
 }
 
 // -- Convenience types for the app ------------------------------------------

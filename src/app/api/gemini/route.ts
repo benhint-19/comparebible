@@ -5,7 +5,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getPersona } from "@/lib/ai/personas";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;

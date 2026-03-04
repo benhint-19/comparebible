@@ -111,7 +111,7 @@ function verseContentToText(content: VerseContentItem[]): string {
  * Extract simplified verses (number + plain text) from a ChapterResponse.
  */
 export function extractSimpleVerses(chapter: ChapterResponse): SimpleVerse[] {
-  return chapter.chapter
+  return chapter.chapter.content
     .filter((el): el is ChapterVerse => el.type === "verse")
     .map((v) => ({
       number: v.number,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -30,6 +30,32 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * HydrationGuard prevents rendering children until the client has mounted,
+ * avoiding hydration mismatches from Zustand persist stores reading localStorage.
+ */
+function HydrationGuard({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[var(--accent)] border-t-transparent" />
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <ThemeProvider>{children}</ThemeProvider>;
+  return (
+    <HydrationGuard>
+      <ThemeProvider>{children}</ThemeProvider>
+    </HydrationGuard>
+  );
 }

@@ -78,7 +78,7 @@ export default function ChapterView() {
       </h1>
 
       <div className="space-y-1">
-        {chapterData.chapter.map((element: ChapterElement, index: number) => {
+        {chapterData.chapter.content.map((element: ChapterElement, index: number) => {
           switch (element.type) {
             case "heading":
               return (
