@@ -9,13 +9,14 @@ import type { QuizResult } from "@/lib/quiz/scoring";
 interface QuizResultsProps {
   result: QuizResult;
   onRetake: () => void;
+  onComplete?: () => void;
 }
 
 function getTranslationName(id: string): string {
   return translationProfiles.find((t) => t.id === id)?.name ?? id;
 }
 
-export default function QuizResults({ result, onRetake }: QuizResultsProps) {
+export default function QuizResults({ result, onRetake, onComplete }: QuizResultsProps) {
   const router = useRouter();
   const setPrimary = useTranslationStore((s) => s.setPrimary);
   const setParallel = useTranslationStore((s) => s.setParallel);
@@ -25,7 +26,11 @@ export default function QuizResults({ result, onRetake }: QuizResultsProps) {
     setPrimary(result.primary);
     setParallel(result.parallels);
     setQuizCompleted(true);
-    router.push("/");
+    if (onComplete) {
+      onComplete();
+    } else {
+      router.push("/");
+    }
   };
 
   return (

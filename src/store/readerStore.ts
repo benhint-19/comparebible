@@ -16,7 +16,7 @@ interface ReaderState {
 export const useReaderStore = create<ReaderState>()(
   persist(
     (set) => ({
-      currentBook: "GEN",
+      currentBook: "JHN",
       currentChapter: 1,
       expandedVerses: new Set<number>(),
 

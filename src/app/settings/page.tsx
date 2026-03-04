@@ -1,13 +1,31 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslationStore } from "@/store/translationStore";
+import { translationProfiles } from "@/lib/quiz/translations";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function SettingsPage() {
   const { fontSize, setFontSize, quizCompleted } = useSettingsStore();
-  const { primaryTranslation, parallelTranslations } = useTranslationStore();
+  const {
+    primaryTranslation,
+    parallelTranslations,
+    setPrimary,
+    addParallel,
+    removeParallel,
+  } = useTranslationStore();
+
+  const [showTranslationPicker, setShowTranslationPicker] = useState(false);
+
+  const getPrimaryName = () => {
+    return translationProfiles.find((t) => t.id === primaryTranslation)?.name ?? primaryTranslation;
+  };
+
+  const getTranslationName = (id: string) => {
+    return translationProfiles.find((t) => t.id === id)?.name ?? id;
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
@@ -58,18 +76,84 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Translations */}
+        {/* Primary Translation */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-          <h2 className="font-medium mb-2">Translations</h2>
-          <div className="text-sm text-[var(--color-muted-foreground)] space-y-1">
-            <p>Primary: <span className="text-[var(--color-foreground)] font-medium">{primaryTranslation}</span></p>
-            <p>Parallel: <span className="text-[var(--color-foreground)] font-medium">{parallelTranslations.join(', ')}</span></p>
+          <h2 className="font-medium mb-3">Primary Translation</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            The main English interpretation you read. Different translators render the original Hebrew and Greek texts with different priorities — some prioritize literal accuracy, others readability.
+          </p>
+          <select
+            value={primaryTranslation}
+            onChange={(e) => setPrimary(e.target.value)}
+            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-foreground)] px-3 py-2 text-sm"
+          >
+            {translationProfiles.map((t) => (
+              <option key={t.id} value={t.id}>{t.name} ({t.id})</option>
+            ))}
+          </select>
+        </section>
+
+        {/* Parallel Translations */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">Parallel Translations</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Shown when you tap a verse. Compare how different translators interpreted the same passage.
+          </p>
+
+          {/* Current parallels */}
+          <div className="space-y-2 mb-3">
+            {parallelTranslations.map((id) => (
+              <div key={id} className="flex items-center justify-between rounded-lg bg-[var(--color-background)] px-3 py-2 border border-[var(--color-border)]">
+                <span className="text-sm font-medium">{getTranslationName(id)}</span>
+                <button
+                  onClick={() => removeParallel(id)}
+                  className="text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            {parallelTranslations.length === 0 && (
+              <p className="text-sm text-[var(--color-muted-foreground)] italic">No parallel translations selected</p>
+            )}
           </div>
+
+          {/* Add button */}
+          <button
+            onClick={() => setShowTranslationPicker(!showTranslationPicker)}
+            className="text-sm text-[var(--color-accent)] hover:underline"
+          >
+            {showTranslationPicker ? "Hide list" : "+ Add translation"}
+          </button>
+
+          {showTranslationPicker && (
+            <div className="mt-3 space-y-1 max-h-48 overflow-y-auto">
+              {translationProfiles
+                .filter((t) => t.id !== primaryTranslation && !parallelTranslations.includes(t.id))
+                .map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => addParallel(t.id)}
+                    className="w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-[var(--color-background)] transition-colors"
+                  >
+                    {t.name} <span className="text-[var(--color-muted-foreground)]">({t.id})</span>
+                  </button>
+                ))}
+            </div>
+          )}
+        </section>
+
+        {/* Quiz */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">Translation Quiz</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Not sure which translations to use? Take a quick quiz to find the best match for your reading style.
+          </p>
           <Link
             href="/quiz"
-            className="mt-3 inline-block text-sm text-[var(--color-accent)] hover:underline"
+            className="inline-block text-sm text-[var(--color-accent)] hover:underline"
           >
-            {quizCompleted ? 'Retake translation quiz' : 'Take the translation quiz'}
+            {quizCompleted ? "Retake translation quiz" : "Take the translation quiz"}
           </Link>
         </section>
 
@@ -77,7 +161,7 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">About</h2>
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            CompareBible — Parallel Bible reading with AI-powered perspectives.
+            CompareBible — Compare how different English translators have interpreted Bible passages over the centuries, with AI-powered analysis from multiple perspectives.
             Bible text from bible.helloao.org. AI analysis powered by Google Gemini.
           </p>
         </section>

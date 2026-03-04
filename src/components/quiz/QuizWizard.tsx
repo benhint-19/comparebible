@@ -6,7 +6,11 @@ import { scoreQuiz, type QuizResult } from "@/lib/quiz/scoring";
 import QuizQuestion from "@/components/quiz/QuizQuestion";
 import QuizResults from "@/components/quiz/QuizResults";
 
-export default function QuizWizard() {
+interface QuizWizardProps {
+  onComplete?: () => void;
+}
+
+export default function QuizWizard({ onComplete }: QuizWizardProps = {}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<QuizResult | null>(null);
@@ -47,7 +51,7 @@ export default function QuizWizard() {
 
   // Show results
   if (result) {
-    return <QuizResults result={result} onRetake={handleRetake} />;
+    return <QuizResults result={result} onRetake={handleRetake} onComplete={onComplete} />;
   }
 
   // Show question

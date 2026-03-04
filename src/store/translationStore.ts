@@ -17,7 +17,7 @@ export const useTranslationStore = create<TranslationState>()(
   persist(
     (set) => ({
       primaryTranslation: "BSB",
-      parallelTranslations: ["KJV", "NIV", "NLT"],
+      parallelTranslations: ["eng_kjv", "eng_asv", "eng_web"],
       availableTranslations: [],
 
       setPrimary: (id) => set({ primaryTranslation: id }),
