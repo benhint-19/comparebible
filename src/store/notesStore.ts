@@ -61,6 +61,9 @@ interface NotesState {
     chapter: number,
     verseNumber: number,
   ) => boolean;
+
+  /** All notes sorted by most recently updated */
+  getAllNotesSorted: () => VerseNote[];
 }
 
 export const useNotesStore = create<NotesState>()(
@@ -128,6 +131,12 @@ export const useNotesStore = create<NotesState>()(
       hasNote: (bookId, chapter, verseNumber) => {
         const key = verseKey(bookId, chapter, verseNumber);
         return key in get().notes;
+      },
+
+      getAllNotesSorted: () => {
+        return Object.values(get().notes).sort(
+          (a, b) => b.updatedAt - a.updatedAt,
+        );
       },
     }),
     {

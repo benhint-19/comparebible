@@ -10,9 +10,11 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 import PersonaSettings from "@/components/ai/PersonaSettings";
 import PushToggle from "@/components/ui/PushToggle";
 import TranslationSelect, { getAllTranslations } from "@/components/ui/TranslationSelect";
+import QuizWizard from "@/components/quiz/QuizWizard";
 
 export default function SettingsPage() {
-  const { fontSize, setFontSize, quizCompleted } = useSettingsStore();
+  const { fontSize, setFontSize, quizCompleted, setQuizCompleted } = useSettingsStore();
+  const [showQuiz, setShowQuiz] = useState(false);
   const {
     primaryTranslation,
     parallelTranslations,
@@ -73,6 +75,27 @@ export default function SettingsPage() {
               A+
             </button>
           </div>
+        </section>
+
+        {/* Translation Quiz */}
+        <section className="rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/5 p-4">
+          <h2 className="font-medium mb-2">Translation Quiz</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Not sure which translations to use? Take a quick quiz to find the best match for your reading style.
+          </p>
+          {showQuiz ? (
+            <QuizWizard onComplete={() => {
+              setQuizCompleted(true);
+              setShowQuiz(false);
+            }} />
+          ) : (
+            <button
+              onClick={() => setShowQuiz(true)}
+              className="text-sm text-[var(--color-accent)] hover:underline"
+            >
+              {quizCompleted ? "Retake translation quiz" : "Take the translation quiz"}
+            </button>
+          )}
         </section>
 
         {/* Primary Translation */}
@@ -199,6 +222,7 @@ export default function SettingsPage() {
                 <li>&ldquo;Compare&rdquo; or &ldquo;Show translations&rdquo; &mdash; Expand the current verse to show parallel translations</li>
                 <li>&ldquo;Analyze this&rdquo; or &ldquo;Go deeper&rdquo; &mdash; Open AI analysis for the current verse</li>
                 <li>&ldquo;What does this mean?&rdquo; or &ldquo;Perspectives&rdquo; &mdash; Same as above</li>
+                <li>&ldquo;Take a note&rdquo; or &ldquo;Add note&rdquo; &mdash; Pause and open the note editor for the current verse</li>
               </ul>
             </div>
 
@@ -214,20 +238,6 @@ export default function SettingsPage() {
               &ldquo;Exit audio mode&rdquo; &mdash; Turn off audiobook mode
             </p>
           </div>
-        </section>
-
-        {/* Quiz */}
-        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-          <h2 className="font-medium mb-2">Translation Quiz</h2>
-          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
-            Not sure which translations to use? Take a quick quiz to find the best match for your reading style.
-          </p>
-          <Link
-            href="/quiz"
-            className="inline-block text-sm text-[var(--color-accent)] hover:underline"
-          >
-            {quizCompleted ? "Retake translation quiz" : "Take the translation quiz"}
-          </Link>
         </section>
 
         {/* Account & Sync */}

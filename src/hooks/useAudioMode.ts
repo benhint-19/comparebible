@@ -237,6 +237,19 @@ export function useAudioMode(verses: SimpleVerse[]) {
         toggleVerseExpanded(currentVerseRef.current);
         break;
 
+      case "audio_note":
+        // Pause and expand verse so note editor is visible
+        audioPause();
+        toggleVerseExpanded(currentVerseRef.current);
+        // Focus the note editor after expansion animation
+        setTimeout(() => {
+          const noteInput = document.querySelector<HTMLTextAreaElement>(
+            `[data-verse="${currentVerseRef.current}"] textarea, [data-verse="${currentVerseRef.current}"] [data-note-editor]`,
+          );
+          noteInput?.focus();
+        }, 400);
+        break;
+
       case "audio_analyze": {
         // Pause, expand verse, and open AI analysis panel
         audioPause();

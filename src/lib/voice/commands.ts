@@ -25,6 +25,7 @@ export type VoiceCommandType =
   | "audio_repeat"
   | "audio_compare"
   | "audio_analyze"
+  | "audio_note"
   | "audio_exit"
   | "unknown";
 
@@ -61,6 +62,13 @@ const AUDIO_INTENT_PATTERNS: IntentPattern[] = [
     type: "audio_play",
     pattern:
       /^(?:play|continue|resume|keep\s+reading|keep\s+going|go\s+on|start\s+reading|continue\s+reading|resume\s+reading)$/,
+  },
+
+  // Take a note
+  {
+    type: "audio_note",
+    pattern:
+      /^(?:take\s+a\s+note|add\s+(?:a\s+)?note|note\s+this|make\s+a\s+note)$/,
   },
 
   // Exit audio mode entirely
