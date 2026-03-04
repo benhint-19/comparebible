@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>CompareBible</string>
+        <string>Selah</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,9 +48,9 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>CompareBible uses the microphone for voice commands to navigate, search, and read passages aloud.</string>
+	<string>Selah uses the microphone for voice commands to navigate, search, and read passages aloud.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>CompareBible uses speech recognition for voice commands to navigate and search Bible passages.</string>
+	<string>Selah uses speech recognition for voice commands to navigate and search Bible passages.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

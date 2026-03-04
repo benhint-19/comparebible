@@ -31,7 +31,7 @@ export default function OnboardingModal() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 shrink-0 border-b border-[var(--color-border)]">
           <div>
-            <h2 className="text-lg font-bold">Welcome to CompareBible</h2>
+            <h2 className="text-lg font-bold">Welcome to Selah</h2>
             <p className="text-sm text-[var(--color-muted-foreground)] mt-0.5">
               Find the best English Bible interpretation for you
             </p>

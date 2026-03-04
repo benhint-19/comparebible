@@ -1,7 +1,7 @@
 {
-  "name": "CompareBible",
-  "short_name": "CompareBible",
-  "description": "Parallel Bible reading with AI perspectives",
+  "name": "Selah — Parallel Bible Audio & Perspectives",
+  "short_name": "Selah",
+  "description": "Listen to and compare Bible translations side-by-side with AI-powered scholarly perspectives",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAFAF8",

@@ -176,7 +176,7 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">Voice Commands (Audio Mode)</h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mb-4">
-            CompareBible includes an audiobook mode that reads Bible chapters aloud.
+            Selah includes an audiobook mode that reads Bible chapters aloud.
             While listening, you can use voice commands to control playback and explore passages.
           </p>
 
@@ -242,7 +242,7 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">About</h2>
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            CompareBible — Compare how different English translators have interpreted Bible passages over the centuries, with AI-powered analysis from multiple perspectives.
+            Selah — Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore AI-powered analysis from multiple scholarly perspectives.
             Bible text from bible.helloao.org. AI analysis powered by Google Gemini.
           </p>
         </section>

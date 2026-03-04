@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.comparebible.app",
-  appName: "CompareBible",
+  appName: "Selah",
   webDir: "out",
   plugins: {
     PushNotifications: {
