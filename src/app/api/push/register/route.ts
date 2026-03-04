@@ -1,0 +1,53 @@
+// ---------------------------------------------------------------------------
+// POST /api/push/register -- store device push tokens in Firestore
+// ---------------------------------------------------------------------------
+
+import { getAdminFirestore } from "@/lib/push/firebaseAdmin";
+
+export const runtime = "nodejs";
+
+export async function POST(request: Request) {
+  let body: { token?: string; platform?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  const { token, platform } = body;
+  if (!token || !platform) {
+    return new Response("Missing required fields: token, platform", {
+      status: 400,
+    });
+  }
+
+  try {
+    const db = getAdminFirestore();
+    const tokensRef = db.collection("device_tokens");
+
+    // Upsert by token -- query for existing doc with this token
+    const existing = await tokensRef.where("token", "==", token).limit(1).get();
+
+    if (existing.empty) {
+      await tokensRef.add({
+        token,
+        platform,
+        createdAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+      });
+    } else {
+      // Update lastSeen timestamp
+      const doc = existing.docs[0];
+      await doc.ref.update({
+        lastSeen: new Date().toISOString(),
+        platform,
+      });
+    }
+
+    return Response.json({ success: true });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("[push/register] Error:", msg);
+    return new Response(`Failed to register token: ${msg}`, { status: 500 });
+  }
+}

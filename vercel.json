@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/push/send-votd",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}

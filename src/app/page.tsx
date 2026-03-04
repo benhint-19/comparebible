@@ -10,8 +10,11 @@ import { TTSControls } from "@/components/voice/TTSControls";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 import OnboardingModal from "@/components/quiz/OnboardingModal";
 import VerseOfDay from "@/components/ui/VerseOfDay";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Home() {
+  usePushNotifications();
+
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-background)]">
       <OfflineBanner />

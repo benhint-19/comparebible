@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { getDB } from "@/lib/db";
+import { API_BASE_URL } from "@/lib/apiBase";
 import type { PerspectiveRequest } from "@/lib/ai/types";
 
 // -- Streaming fetch --------------------------------------------------------
@@ -13,7 +14,7 @@ import type { PerspectiveRequest } from "@/lib/ai/types";
 export async function* streamPerspective(
   request: PerspectiveRequest,
 ): AsyncGenerator<string> {
-  const res = await fetch("/api/gemini", {
+  const res = await fetch(`${API_BASE_URL}/api/gemini`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),

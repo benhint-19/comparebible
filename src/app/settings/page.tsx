@@ -6,6 +6,7 @@ import { useTranslationStore } from "@/store/translationStore";
 import { translationPresets } from "@/lib/bible/presets";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import PersonaSettings from "@/components/ai/PersonaSettings";
+import PushToggle from "@/components/ui/PushToggle";
 import TranslationSelect, { getAllTranslations } from "@/components/ui/TranslationSelect";
 
 export default function SettingsPage() {
@@ -156,6 +157,15 @@ export default function SettingsPage() {
             Choose which scholarly perspectives to include when analyzing passages.
           </p>
           <PersonaSettings />
+        </section>
+
+        {/* Notifications */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">Notifications</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Get a daily verse of the day push notification.
+          </p>
+          <PushToggle />
         </section>
 
         {/* Quiz */}
