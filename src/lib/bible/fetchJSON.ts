@@ -29,22 +29,22 @@ export async function fetchJSON<T = unknown>(
     );
   }
 
+  // Read the body as text first so we can inspect it on failure.
+  const text = await res.text();
+
   // Guard against HTML responses masquerading as 200 OK.
-  const contentType = res.headers.get("content-type") ?? "";
-  if (contentType.includes("text/html")) {
+  if (text.trimStart().startsWith("<")) {
     throw new Error(
       `Expected JSON but received HTML from ${url} (status ${res.status}). ` +
         "The server may be returning an error page.",
     );
   }
 
-  // Even with the content-type check, wrap .json() in a try/catch for
-  // edge cases (missing content-type header, truncated responses, etc.).
   try {
-    return (await res.json()) as T;
+    return JSON.parse(text) as T;
   } catch (parseError) {
     throw new Error(
-      `Invalid JSON response from ${url} (status ${res.status}): ${
+      `Invalid JSON from ${url} (status ${res.status}): ${
         parseError instanceof Error ? parseError.message : String(parseError)
       }`,
     );

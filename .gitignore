@@ -43,6 +43,10 @@ next-env.d.ts
 # PWA generated files
 public/sw.js
 public/sw.js.map
+
+# Firebase config files (injected by Codemagic at build time)
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
 public/workbox-*.js
 public/workbox-*.js.map
 public/swe-worker-*.js

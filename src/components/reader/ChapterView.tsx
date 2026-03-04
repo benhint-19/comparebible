@@ -66,8 +66,11 @@ export default function ChapterView() {
           <p className="text-sm font-medium text-red-500 mb-1">
             Unable to load {bookName} {currentChapter}
           </p>
-          <p className="text-xs text-[var(--muted-foreground)] mb-3">
+          <p className="text-xs text-[var(--muted-foreground)] mb-1">
             Please check your internet connection or try a different translation.
+          </p>
+          <p className="text-[10px] text-[var(--muted-foreground)]/60 mb-3 break-all">
+            {error}
           </p>
           <button
             onClick={() => {
