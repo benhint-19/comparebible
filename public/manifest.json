@@ -1,0 +1,21 @@
+{
+  "name": "CompareBible",
+  "short_name": "CompareBible",
+  "description": "Parallel Bible reading with AI perspectives",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#4a6fa5",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
