@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useVoiceStore } from "@/store/voiceStore";
 
+// Write-only access — avoids subscribing to all store changes which would
+// recreate callbacks and cause infinite update loops in useAudioMode.
+const getVoice = () => useVoiceStore.getState();
+
 // ---------------------------------------------------------------------------
 // Browser type augmentation
 // ---------------------------------------------------------------------------
@@ -73,8 +77,6 @@ export function useVoiceRecognition() {
   // Keep a handle to remove the Capacitor listener on cleanup
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const capListenerRef = useRef<any>(null);
-
-  const voiceStore = useVoiceStore();
 
   // ------------------------------------------------------------------
   // Check support on mount
@@ -151,7 +153,7 @@ export function useVoiceRecognition() {
         }
 
         setTranscript("");
-        voiceStore.setTranscript("");
+        getVoice().setTranscript("");
 
         // Listen for partial results
         capListenerRef.current = await CapSR.addListener(
@@ -159,7 +161,7 @@ export function useVoiceRecognition() {
           (data: { matches: string[] }) => {
             const text = data.matches?.[0] ?? "";
             setTranscript(text);
-            voiceStore.setTranscript(text);
+            getVoice().setTranscript(text);
           },
         );
 
@@ -169,10 +171,10 @@ export function useVoiceRecognition() {
           (data: { status: "started" | "stopped" }) => {
             if (data.status === "started") {
               setIsListening(true);
-              voiceStore.setListening(true);
+              getVoice().setListening(true);
             } else {
               setIsListening(false);
-              voiceStore.setListening(false);
+              getVoice().setListening(false);
             }
           },
         );
@@ -188,11 +190,11 @@ export function useVoiceRecognition() {
         });
 
         setIsListening(true);
-        voiceStore.setListening(true);
+        getVoice().setListening(true);
       } catch (err) {
         console.warn("[VoiceRecognition] Native start error:", err);
         setIsListening(false);
-        voiceStore.setListening(false);
+        getVoice().setListening(false);
       }
       return;
     }
@@ -214,7 +216,7 @@ export function useVoiceRecognition() {
 
     recognition.onstart = () => {
       setIsListening(true);
-      voiceStore.setListening(true);
+      getVoice().setListening(true);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -232,7 +234,7 @@ export function useVoiceRecognition() {
 
       const current = final || interim;
       setTranscript(current);
-      voiceStore.setTranscript(current);
+      getVoice().setTranscript(current);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -248,17 +250,17 @@ export function useVoiceRecognition() {
       }
 
       setIsListening(false);
-      voiceStore.setListening(false);
+      getVoice().setListening(false);
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      voiceStore.setListening(false);
+      getVoice().setListening(false);
       recognitionRef.current = null;
     };
 
     recognition.start();
-  }, [voiceStore]);
+  }, []);
 
   // ------------------------------------------------------------------
   // Stop listening
@@ -283,13 +285,13 @@ export function useVoiceRecognition() {
         capListenerRef.current = null;
       }
       setIsListening(false);
-      voiceStore.setListening(false);
+      getVoice().setListening(false);
       return;
     }
 
     // Web
     recognitionRef.current?.stop();
-  }, [voiceStore]);
+  }, []);
 
   // ------------------------------------------------------------------
   // Cleanup on unmount

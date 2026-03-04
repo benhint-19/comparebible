@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useVoiceStore } from "@/store/voiceStore";
 
+// Write-only access — avoids subscribing to all store changes
+const getVoice = () => useVoiceStore.getState();
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -49,8 +52,6 @@ export function useTTS(rate: number = 1) {
   const rateRef = useRef(rate);
   rateRef.current = rate;
 
-  const voiceStore = useVoiceStore();
-
   // Detect TTS support. On iOS WKWebView, speechSynthesis exists but
   // getVoices() may return an empty list until voices are loaded. We listen
   // for the voiceschanged event as a fallback.
@@ -94,12 +95,12 @@ export function useTTS(rate: number = 1) {
 
       utterance.onstart = () => {
         setIsSpeaking(true);
-        voiceStore.setSpeaking(true);
+        getVoice().setSpeaking(true);
       };
 
       utterance.onend = () => {
         setIsSpeaking(false);
-        voiceStore.setSpeaking(false);
+        getVoice().setSpeaking(false);
         utteranceRef.current = null;
         onEnd?.();
       };
@@ -113,7 +114,7 @@ export function useTTS(rate: number = 1) {
           return;
         console.warn("[TTS] error:", event.error);
         setIsSpeaking(false);
-        voiceStore.setSpeaking(false);
+        getVoice().setSpeaking(false);
         utteranceRef.current = null;
       };
 
@@ -144,7 +145,7 @@ export function useTTS(rate: number = 1) {
         if (origOnError) origOnError.call(utterance, ev);
       };
     },
-    [voiceStore],
+    [],
   );
 
   const stop = useCallback(() => {
@@ -152,9 +153,9 @@ export function useTTS(rate: number = 1) {
     if (!synth) return;
     synth.cancel();
     setIsSpeaking(false);
-    voiceStore.setSpeaking(false);
+    getVoice().setSpeaking(false);
     utteranceRef.current = null;
-  }, [voiceStore]);
+  }, []);
 
   const pause = useCallback(() => {
     getSynthesis()?.pause();
