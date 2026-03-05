@@ -18,6 +18,18 @@ async function getAuth() {
   return _getAuth(app);
 }
 
+/**
+ * Check if we're running in a Capacitor native shell (Android/iOS).
+ */
+function isNativePlatform(): boolean {
+  try {
+    // Capacitor sets this on window
+    return typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
+  } catch {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Email / Password
 // ---------------------------------------------------------------------------
@@ -60,9 +72,24 @@ export async function resetPassword(email: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Sign in with Google via popup.
+ * Sign in with Google — uses native account selector on Android/iOS,
+ * falls back to popup on web.
  */
 export async function signInWithGoogle(): Promise<void> {
+  if (isNativePlatform()) {
+    const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+    const result = await FirebaseAuthentication.signInWithGoogle();
+    // Link the native credential to the Firebase JS SDK so auth state syncs
+    const idToken = result.credential?.idToken;
+    if (idToken) {
+      const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
+      const auth = await getAuth();
+      const credential = GoogleAuthProvider.credential(idToken);
+      await signInWithCredential(auth, credential);
+    }
+    return;
+  }
+
   const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
   const auth = await getAuth();
   const provider = new GoogleAuthProvider();
@@ -74,9 +101,25 @@ export async function signInWithGoogle(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Sign in with Apple via popup.
+ * Sign in with Apple — uses native flow on iOS/Android,
+ * falls back to popup on web.
  */
 export async function signInWithApple(): Promise<void> {
+  if (isNativePlatform()) {
+    const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+    const result = await FirebaseAuthentication.signInWithApple();
+    const idToken = result.credential?.idToken;
+    const rawNonce = result.credential?.nonce;
+    if (idToken) {
+      const { OAuthProvider, signInWithCredential } = await import("firebase/auth");
+      const auth = await getAuth();
+      const provider = new OAuthProvider("apple.com");
+      const credential = provider.credential({ idToken, rawNonce: rawNonce ?? undefined });
+      await signInWithCredential(auth, credential);
+    }
+    return;
+  }
+
   const { OAuthProvider, signInWithPopup } = await import("firebase/auth");
   const auth = await getAuth();
   const provider = new OAuthProvider("apple.com");
@@ -135,6 +178,16 @@ export async function signOut(): Promise<void> {
   const { signOut: _signOut } = await import("firebase/auth");
   const auth = await getAuth();
   await _signOut(auth);
+
+  // Also sign out from native layer so the account selector shows next time
+  if (isNativePlatform()) {
+    try {
+      const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+      await FirebaseAuthentication.signOut();
+    } catch {
+      // Ignore — JS SDK sign-out is sufficient
+    }
+  }
 }
 
 /**
