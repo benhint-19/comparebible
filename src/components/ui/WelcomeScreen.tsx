@@ -95,7 +95,7 @@ export default function WelcomeScreen() {
             </div>
             <p className="text-sm font-medium text-[var(--color-foreground)]">Check your email</p>
             <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">
-              We sent a sign-in link to <strong>{email}</strong>. Tap the link to sign in — no password needed.
+              We sent a sign-in link to <strong>{email}</strong>. Tap the link to sign in — no password needed. Check your spam folder if you don&apos;t see it.
             </p>
             <button
               onClick={() => { setLinkSent(false); setError(null); }}

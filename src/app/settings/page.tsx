@@ -380,7 +380,7 @@ function AccountSyncSection({
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-green-600">
-                Sign-in link sent to <strong>{email}</strong>. Check your inbox.
+                Sign-in link sent to <strong>{email}</strong>. Check your inbox and spam folder.
               </p>
               <button
                 onClick={() => { setLinkSent(false); setAuthError(null); }}
