@@ -49,10 +49,10 @@ workflows:
       - name: Build Android release
         script: |
           cd android
-          ./gradlew assembleRelease
+          ./gradlew bundleRelease
 
     artifacts:
-      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/mapping.txt
 
     publishing:
