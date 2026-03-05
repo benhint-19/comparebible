@@ -76,8 +76,13 @@ export default function WelcomeScreen() {
           <p className="text-sm text-[var(--color-muted-foreground)]">Pause and reflect</p>
         </div>
 
-        {/* Explanation */}
+        {/* App description */}
         <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">
+          Compare Bible translations side by side, explore AI-powered scholarly perspectives, listen in audio mode, and take notes on any verse.
+        </p>
+
+        {/* Sync explanation */}
+        <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">
           Sign in to sync your notes, settings, and reading position across devices. This is completely optional.
         </p>
 
@@ -131,6 +136,13 @@ export default function WelcomeScreen() {
         >
           Continue without an account
         </button>
+
+        {/* Legal links */}
+        <div className="flex items-center justify-center gap-3 text-xs text-[var(--color-muted-foreground)]">
+          <a href="/privacy" className="hover:underline">Privacy Policy</a>
+          <span>·</span>
+          <a href="/terms" className="hover:underline">Terms of Service</a>
+        </div>
       </div>
     </div>
   );

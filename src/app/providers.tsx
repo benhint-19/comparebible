@@ -66,6 +66,14 @@ function HydrationGuard({ children }: { children: React.ReactNode }) {
 function WelcomeGate({ children }: { children: React.ReactNode }) {
   const hasSeenWelcome = useSettingsStore((s) => s.hasSeenWelcome);
 
+  // Allow public pages through without the welcome screen
+  if (typeof window !== "undefined") {
+    const path = window.location.pathname;
+    if (["/privacy", "/terms", "/support", "/delete-account"].includes(path)) {
+      return <>{children}</>;
+    }
+  }
+
   if (!hasSeenWelcome) {
     return <WelcomeScreen />;
   }
