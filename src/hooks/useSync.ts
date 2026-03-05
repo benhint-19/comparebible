@@ -59,6 +59,11 @@ export function useSyncEffect() {
             displayName: firebaseUser.displayName,
             isAnonymous: firebaseUser.isAnonymous,
           });
+          // Auto-dismiss welcome screen when user is signed in
+          // (handles case where native sign-in picker returns but dismiss() didn't run)
+          if (!useSettingsStore.getState().hasSeenWelcome) {
+            useSettingsStore.getState().setHasSeenWelcome(true);
+          }
           startSync(firebaseUser as AuthUser);
         } else {
           useAuthStore.getState().setUser(null);
