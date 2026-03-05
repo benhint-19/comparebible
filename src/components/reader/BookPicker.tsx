@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { getBookById, getTestamentBooks } from "@/lib/bible/books";
 import type { Testament } from "@/lib/bible/books";
 import { useReaderStore } from "@/store/readerStore";
@@ -76,7 +77,7 @@ export default function BookPicker() {
         {currentBookMeta?.name ?? currentBook} {currentChapter}
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div className="fixed inset-0 z-50 overflow-y-auto" onClick={close}>
           <div className="fixed inset-0 bg-black/50" />
           <div className="min-h-full flex items-center justify-center p-4">
@@ -181,7 +182,8 @@ export default function BookPicker() {
             )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
