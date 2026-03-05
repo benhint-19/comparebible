@@ -7,12 +7,16 @@ import { getPersona } from "@/lib/ai/personas";
 
 export const runtime = "nodejs";
 
+import { CORS_HEADERS, corsOptions } from "../cors";
+
+export { corsOptions as OPTIONS };
+
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   if (!apiKey) {
     return new Response(
       "GEMINI_API_KEY is not configured. Add it to your Vercel Environment Variables (Settings → Environment Variables → GEMINI_API_KEY).",
-      { status: 500 },
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 
@@ -20,13 +24,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return new Response("Invalid JSON body", { status: 400 });
+    return new Response("Invalid JSON body", { status: 400, headers: CORS_HEADERS });
   }
 
   const { persona: personaId, passage, verseText } = body;
   if (!personaId || !passage || !verseText) {
     return new Response("Missing required fields: persona, passage, verseText", {
-      status: 400,
+      status: 400, headers: CORS_HEADERS,
     });
   }
 
@@ -65,6 +69,7 @@ export async function POST(request: Request) {
 
     return new Response(readable, {
       headers: {
+        ...CORS_HEADERS,
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
         "Transfer-Encoding": "chunked",
@@ -72,6 +77,6 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
-    return new Response(`Gemini API call failed: ${msg}`, { status: 502 });
+    return new Response(`Gemini API call failed: ${msg}`, { status: 502, headers: CORS_HEADERS });
   }
 }

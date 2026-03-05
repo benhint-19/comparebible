@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CORS_HEADERS, corsOptions } from "../cors";
+
+export { corsOptions as OPTIONS };
 
 export async function POST(req: NextRequest) {
   try {
     const { name, email, message } = await req.json();
 
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
-      return NextResponse.json({ error: "All fields required" }, { status: 400 });
+      return NextResponse.json({ error: "All fields required" }, { status: 400, headers: CORS_HEADERS });
     }
 
     // Store in Firestore using admin SDK
@@ -19,9 +22,9 @@ export async function POST(req: NextRequest) {
       read: false,
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error("[Support] Failed to save message:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal error" }, { status: 500, headers: CORS_HEADERS });
   }
 }

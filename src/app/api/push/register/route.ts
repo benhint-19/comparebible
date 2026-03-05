@@ -3,8 +3,11 @@
 // ---------------------------------------------------------------------------
 
 import { getAdminFirestore } from "@/lib/push/firebaseAdmin";
+import { CORS_HEADERS, corsOptions } from "../../cors";
 
 export const runtime = "nodejs";
+
+export { corsOptions as OPTIONS };
 
 export async function POST(request: Request) {
   let body: {
@@ -16,13 +19,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return new Response("Invalid JSON body", { status: 400 });
+    return new Response("Invalid JSON body", { status: 400, headers: CORS_HEADERS });
   }
 
   const { token, platform, timezone, preferredHour } = body;
   if (!token || !platform) {
     return new Response("Missing required fields: token, platform", {
-      status: 400,
+      status: 400, headers: CORS_HEADERS,
     });
   }
 
@@ -53,10 +56,10 @@ export async function POST(request: Request) {
       });
     }
 
-    return Response.json({ success: true });
+    return Response.json({ success: true }, { headers: CORS_HEADERS });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     console.error("[push/register] Error:", msg);
-    return new Response(`Failed to register token: ${msg}`, { status: 500 });
+    return new Response(`Failed to register token: ${msg}`, { status: 500, headers: CORS_HEADERS });
   }
 }
