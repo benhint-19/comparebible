@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useAuthStore } from "@/store/authStore";
 import { initNative } from "@/lib/native/init";
 import { useSyncEffect } from "@/hooks/useSync";
 import WelcomeScreen from "@/components/ui/WelcomeScreen";
@@ -65,6 +66,7 @@ function HydrationGuard({ children }: { children: React.ReactNode }) {
 
 function WelcomeGate({ children }: { children: React.ReactNode }) {
   const hasSeenWelcome = useSettingsStore((s) => s.hasSeenWelcome);
+  const user = useAuthStore((s) => s.user);
 
   // Allow public pages through without the welcome screen
   if (typeof window !== "undefined") {
@@ -72,6 +74,13 @@ function WelcomeGate({ children }: { children: React.ReactNode }) {
     if (["/privacy", "/terms", "/support", "/delete-account"].includes(path)) {
       return <>{children}</>;
     }
+  }
+
+  // If user is already signed in (e.g. native sign-in completed but dismiss didn't run),
+  // skip welcome and persist the flag so it doesn't flash on next launch
+  if (user && !hasSeenWelcome) {
+    useSettingsStore.getState().setHasSeenWelcome(true);
+    return <>{children}</>;
   }
 
   if (!hasSeenWelcome) {

@@ -17,13 +17,14 @@ export default function WelcomeScreen() {
       err && typeof err === "object" && "code" in err
         ? (err as { code: string }).code
         : "";
+    const msg = err instanceof Error ? err.message : String(err);
     switch (code) {
       case "auth/popup-closed-by-user":
         return "Sign-in popup was closed. Please try again.";
       case "auth/too-many-requests":
         return "Too many attempts. Please wait a moment.";
       default:
-        return "Something went wrong. Please try again.";
+        return `Sign-in failed: ${code || msg}`;
     }
   }
 
