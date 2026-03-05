@@ -77,12 +77,13 @@ export default function BookPicker() {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50" onClick={close}>
-          <div className="absolute inset-0 bg-black/50" />
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md max-h-[80vh] flex flex-col rounded-xl shadow-2xl overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] border border-[var(--color-border)]"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={close}>
+          <div className="fixed inset-0 bg-black/50" />
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div
+              className="relative w-full max-w-md max-h-[80vh] flex flex-col rounded-xl shadow-2xl overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] border border-[var(--color-border)]"
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 shrink-0 border-b border-[var(--color-border)]">
               <div className="flex items-center gap-2">
@@ -178,6 +179,7 @@ export default function BookPicker() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}
