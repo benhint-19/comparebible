@@ -60,34 +60,13 @@ export async function resetPassword(email: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Sign in with Google via popup (web) or native SDK (Capacitor).
+ * Sign in with Google via popup.
  */
 export async function signInWithGoogle(): Promise<void> {
-  const isNative = await isNativePlatform();
-
-  if (isNative) {
-    // Use Capacitor Firebase Auth plugin for native Google Sign-In
-    const { FirebaseAuthentication } = await import(
-      "@capacitor-firebase/authentication"
-    );
-    const { GoogleAuthProvider, signInWithCredential } = await import(
-      "firebase/auth"
-    );
-    const result = await FirebaseAuthentication.signInWithGoogle();
-    // Sync the native credential with the web Firebase Auth instance
-    const auth = await getAuth();
-    const credential = GoogleAuthProvider.credential(
-      result.credential?.idToken,
-    );
-    await signInWithCredential(auth, credential);
-  } else {
-    const { GoogleAuthProvider, signInWithPopup } = await import(
-      "firebase/auth"
-    );
-    const auth = await getAuth();
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  }
+  const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+  const auth = await getAuth();
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
 }
 
 // ---------------------------------------------------------------------------
@@ -95,31 +74,13 @@ export async function signInWithGoogle(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Sign in with Apple via popup (web) or native SDK (Capacitor).
+ * Sign in with Apple via popup.
  */
 export async function signInWithApple(): Promise<void> {
-  const isNative = await isNativePlatform();
-
-  if (isNative) {
-    const { FirebaseAuthentication } = await import(
-      "@capacitor-firebase/authentication"
-    );
-    const { OAuthProvider, signInWithCredential } = await import(
-      "firebase/auth"
-    );
-    const result = await FirebaseAuthentication.signInWithApple();
-    const auth = await getAuth();
-    const provider = new OAuthProvider("apple.com");
-    const credential = provider.credential({
-      idToken: result.credential?.idToken ?? "",
-    });
-    await signInWithCredential(auth, credential);
-  } else {
-    const { OAuthProvider, signInWithPopup } = await import("firebase/auth");
-    const auth = await getAuth();
-    const provider = new OAuthProvider("apple.com");
-    await signInWithPopup(auth, provider);
-  }
+  const { OAuthProvider, signInWithPopup } = await import("firebase/auth");
+  const auth = await getAuth();
+  const provider = new OAuthProvider("apple.com");
+  await signInWithPopup(auth, provider);
 }
 
 // ---------------------------------------------------------------------------
@@ -207,18 +168,3 @@ export async function onAuthStateChanged(
   });
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Detect whether we are running inside a Capacitor native shell.
- */
-async function isNativePlatform(): Promise<boolean> {
-  try {
-    const { Capacitor } = await import("@capacitor/core");
-    return Capacitor.isNativePlatform();
-  } catch {
-    return false;
-  }
-}
