@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
     } catch (err) {
       console.error("Magic link failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
-      setError(msg.includes("auth/") ? "Could not send link. Check your email and try again." : msg);
+      setError(msg);
     } finally {
       setBusy(false);
     }

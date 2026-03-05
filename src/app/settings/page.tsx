@@ -296,7 +296,7 @@ function AccountSyncSection({
     } catch (err) {
       console.error("Magic link failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
-      setAuthError(msg.includes("auth/") ? "Could not send link. Check your email and try again." : msg);
+      setAuthError(msg);
     } finally {
       setAuthBusy(false);
     }
