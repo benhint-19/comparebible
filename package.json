@@ -10,7 +10,8 @@
     "cap:build": "CAPACITOR_BUILD=true next build && npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
-    "cap:sync": "npx cap sync"
+    "cap:sync": "npx cap sync",
+    "postinstall": "node -e \"const f='node_modules/@capacitor-community/apple-sign-in/Package.swift';try{const s=require('fs').readFileSync(f,'utf8');require('fs').writeFileSync(f,s.replace('from: \\\"7.0.0\\\"','from: \\\"8.0.0\\\"'))}catch{}\""
   },
   "dependencies": {
     "@capacitor-community/apple-sign-in": "^7.1.0",
