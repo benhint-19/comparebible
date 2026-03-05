@@ -99,11 +99,9 @@ workflows:
 
       - name: Auto-increment build number
         script: |
-          LATEST=$(app-store-connect get-latest-testflight-build-number com.comparebible.app || echo 0)
-          NEW_BUILD=$((LATEST + 1))
           cd ios/App
-          agvtool new-version -all $NEW_BUILD
-          echo "Build number set to $NEW_BUILD"
+          agvtool new-version -all $((PROJECT_BUILD_NUMBER + 2))
+          echo "Build number set to $((PROJECT_BUILD_NUMBER + 2))"
 
       - name: Set up code signing
         script: |
