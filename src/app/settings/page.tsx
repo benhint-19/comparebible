@@ -124,26 +124,20 @@ export default function SettingsPage() {
                 preset.translationIds.length === parallelTranslations.length &&
                 preset.translationIds.every((id) => parallelTranslations.includes(id));
               return (
-                <div
+                <button
                   key={preset.id}
-                  className={`text-left rounded-lg border transition-colors ${
+                  onClick={() => setParallel(preset.translationIds)}
+                  className={`text-left rounded-lg border transition-colors cursor-pointer px-3 py-2.5 ${
                     isActive
                       ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10"
-                      : "border-[var(--color-border)] bg-[var(--color-background)]"
+                      : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-[var(--color-accent)]/50"
                   }`}
                 >
-                  <button
-                    onClick={() => setParallel(preset.translationIds)}
-                    className={`w-full text-left px-3 py-2.5 rounded-t-lg transition-colors ${
-                      !isActive ? "hover:border-[var(--color-accent)]/50" : ""
-                    }`}
-                  >
-                    <span className="text-sm font-medium">{preset.name}</span>
-                    <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
-                      {preset.description}
-                    </p>
-                  </button>
-                  <ul className="px-3 pb-2.5 space-y-1.5">
+                  <span className="text-sm font-medium">{preset.name}</span>
+                  <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                    {preset.description}
+                  </p>
+                  <ul className="mt-1.5 space-y-1.5">
                     {preset.explanations.map((ex) => (
                       <li key={ex.id} className="text-xs text-[var(--color-muted-foreground)] leading-snug">
                         <span className="font-semibold text-[var(--color-foreground)]">{ex.id.replace("bolls:", "").replace("eng_", "").toUpperCase()}</span>
@@ -152,7 +146,7 @@ export default function SettingsPage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </button>
               );
             })}
           </div>
