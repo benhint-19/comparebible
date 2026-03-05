@@ -7,6 +7,13 @@
 
 import { getFirebaseApp } from "./firebase";
 
+/** Generate a random nonce string for Apple Sign-In. */
+function generateNonce(length = 32): string {
+  const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(values, (v) => charset[v % charset.length]).join("");
+}
+
 /**
  * Lazily import and return the Firebase Auth instance.
  */
@@ -63,14 +70,19 @@ export async function resetPassword(email: string): Promise<void> {
 
 /**
  * Google Sign-In.
- * - Web & Android: signInWithPopup (works in Chrome WebView)
- * - iOS: signInWithPopup doesn't work in WKWebView, so we use
- *   signInWithRedirect + getRedirectResult as a fallback.
+ * - Web & Android: signInWithPopup (works in real browsers / Chrome WebView)
+ * - iOS: signInWithRedirect (popups blocked in WKWebView)
  */
 export async function signInWithGoogle(): Promise<void> {
-  const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+  const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = await import("firebase/auth");
   const auth = await getAuth();
   const provider = new GoogleAuthProvider();
+
+  if (getPlatform() === "ios") {
+    await signInWithRedirect(auth, provider);
+    return;
+  }
+
   await signInWithPopup(auth, provider);
 }
 
@@ -88,10 +100,17 @@ export async function signInWithApple(): Promise<void> {
   if (getPlatform() === "ios") {
     // Native Apple Sign-In via Capacitor plugin
     const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+
+    // Generate a nonce for Firebase to validate the token
+    const rawNonce = generateNonce();
+    const { sha256 } = await import("./crypto");
+    const hashedNonce = await sha256(rawNonce);
+
     const result = await SignInWithApple.authorize({
       clientId: "com.comparebible.app",
       redirectURI: "",
       scopes: "email name",
+      nonce: hashedNonce,
     });
 
     const idToken = result.response.identityToken;
@@ -101,10 +120,7 @@ export async function signInWithApple(): Promise<void> {
     const { OAuthProvider, signInWithCredential } = await import("firebase/auth");
     const auth = await getAuth();
     const provider = new OAuthProvider("apple.com");
-    const credential = provider.credential({
-      idToken,
-      rawNonce: result.response.authorizationCode ?? undefined,
-    });
+    const credential = provider.credential({ idToken, rawNonce });
     await signInWithCredential(auth, credential);
     return;
   }
@@ -165,8 +181,13 @@ export async function onAuthStateChanged(
     return () => {};
   }
 
-  const { onAuthStateChanged: _onAuth } = await import("firebase/auth");
+  const { onAuthStateChanged: _onAuth, getRedirectResult } = await import("firebase/auth");
   const auth = await getAuth();
+
+  // Handle redirect result from signInWithRedirect (iOS Google Sign-In)
+  getRedirectResult(auth).catch(() => {
+    // Ignore — no redirect result means user didn't just come back from redirect
+  });
 
   return _onAuth(auth, (firebaseUser) => {
     if (firebaseUser) {
