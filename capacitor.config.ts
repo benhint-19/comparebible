@@ -19,20 +19,6 @@ const config: CapacitorConfig = {
       backgroundColor: "#FAF8F5",
     },
   },
-  ios: {
-    // Exclude @capacitor-firebase/authentication from iOS — its SPM package
-    // hard-codes Facebook SDK which crashes without config. iOS uses
-    // signInWithPopup instead (works fine in WKWebView).
-    includePlugins: [
-      "@capacitor-community/speech-recognition",
-      "@capacitor-community/text-to-speech",
-      "@capacitor/app",
-      "@capacitor/haptics",
-      "@capacitor/keyboard",
-      "@capacitor/push-notifications",
-      "@capacitor/status-bar",
-    ],
-  },
   // Uncomment for local development:
   // server: {
   //   url: "http://localhost:3000",
