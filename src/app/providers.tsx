@@ -71,7 +71,7 @@ function WelcomeGate({ children }: { children: React.ReactNode }) {
   // Allow public pages through without the welcome screen
   if (typeof window !== "undefined") {
     const path = window.location.pathname;
-    if (["/privacy", "/terms", "/support", "/delete-account"].includes(path)) {
+    if (["/privacy", "/terms", "/support", "/delete-account", "/auth/callback"].includes(path)) {
       return <>{children}</>;
     }
   }
