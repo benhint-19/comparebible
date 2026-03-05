@@ -103,6 +103,11 @@ workflows:
           agvtool new-version -all $((PROJECT_BUILD_NUMBER + 2))
           echo "Build number set to $((PROJECT_BUILD_NUMBER + 2))"
 
+      - name: Resolve SPM packages
+        script: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies
+
       - name: Set up code signing
         script: |
           xcode-project use-profiles
