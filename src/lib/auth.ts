@@ -7,16 +7,17 @@
 
 import { getFirebaseApp } from "./firebase";
 
-/** Generate a random nonce string for Apple Sign-In. */
-function generateNonce(length = 32): string {
-  const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const values = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(values, (v) => charset[v % charset.length]).join("");
-}
+// Google Web Client ID (client_type 3 from google-services.json)
+const GOOGLE_WEB_CLIENT_ID = "722992642330-6lik5llrrg5836n8jqvb0ns0i8nmr2tu.apps.googleusercontent.com";
+// iOS Client ID (from GoogleService-Info.plist)
+const GOOGLE_IOS_CLIENT_ID = "722992642330-kspi8fakf0hoo8k2rg5dg6u63cuoh13e.apps.googleusercontent.com";
 
-/**
- * Lazily import and return the Firebase Auth instance.
- */
+let socialLoginInitialized = false;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 async function getAuth() {
   const app = getFirebaseApp();
   if (!app) throw new Error("Firebase is not configured");
@@ -24,8 +25,7 @@ async function getAuth() {
   return _getAuth(app);
 }
 
-/** True when running inside a Capacitor native shell. */
-function isNativePlatform(): boolean {
+function isNative(): boolean {
   try {
     return typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
   } catch {
@@ -33,12 +33,61 @@ function isNativePlatform(): boolean {
   }
 }
 
-/** "ios" | "android" | "web" */
-function getPlatform(): string {
+function getPlatform(): "ios" | "android" | "web" {
   try {
-    return (window as any).Capacitor?.getPlatform?.() ?? "web";
+    return ((window as any).Capacitor?.getPlatform?.() ?? "web") as "ios" | "android" | "web";
   } catch {
     return "web";
+  }
+}
+
+function generateRawNonce(length = 32): string {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => b.toString(36)).join("").slice(0, length);
+}
+
+async function sha256(message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ---------------------------------------------------------------------------
+// Native social login (via @capgo/capacitor-social-login)
+// ---------------------------------------------------------------------------
+
+async function initSocialLogin(): Promise<boolean> {
+  if (socialLoginInitialized) return true;
+  if (!isNative()) return false;
+
+  try {
+    const { SocialLogin } = await import("@capgo/capacitor-social-login");
+    const platform = getPlatform();
+
+    if (platform === "ios") {
+      await SocialLogin.initialize({
+        google: {
+          webClientId: GOOGLE_WEB_CLIENT_ID,
+          iOSClientId: GOOGLE_IOS_CLIENT_ID,
+        },
+        apple: {},
+      });
+    } else {
+      await SocialLogin.initialize({
+        google: {
+          webClientId: GOOGLE_WEB_CLIENT_ID,
+        },
+      });
+    }
+
+    socialLoginInitialized = true;
+    return true;
+  } catch (error) {
+    console.error("[Auth] SocialLogin init error:", error);
+    return false;
   }
 }
 
@@ -68,21 +117,46 @@ export async function resetPassword(email: string): Promise<void> {
 // Google
 // ---------------------------------------------------------------------------
 
-/**
- * Google Sign-In.
- * - Web & Android: signInWithPopup (works in real browsers / Chrome WebView)
- * - iOS: signInWithRedirect (popups blocked in WKWebView)
- */
 export async function signInWithGoogle(): Promise<void> {
-  const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = await import("firebase/auth");
-  const auth = await getAuth();
-  const provider = new GoogleAuthProvider();
+  // Native: use SocialLogin plugin → get idToken → signInWithCredential
+  if (isNative()) {
+    const ready = await initSocialLogin();
+    if (ready) {
+      const { SocialLogin } = await import("@capgo/capacitor-social-login");
 
-  if (getPlatform() === "ios") {
-    await signInWithRedirect(auth, provider);
-    return;
+      const isIOS = getPlatform() === "ios";
+      let rawNonce: string | undefined;
+      let nonceDigest: string | undefined;
+      if (isIOS) {
+        rawNonce = generateRawNonce();
+        nonceDigest = await sha256(rawNonce);
+      }
+
+      const result = await SocialLogin.login({
+        provider: "google",
+        options: {
+          scopes: ["email", "profile"],
+          ...(nonceDigest ? { nonce: nonceDigest } : {}),
+          ...(isIOS ? { forcePrompt: true } : {}),
+        },
+      });
+
+      if (result?.result && "idToken" in result.result && result.result.idToken) {
+        const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
+        const auth = await getAuth();
+        const credential = GoogleAuthProvider.credential(result.result.idToken);
+        await signInWithCredential(auth, credential);
+        return;
+      }
+
+      throw new Error("Google Sign-In did not return an ID token");
+    }
   }
 
+  // Web fallback: signInWithPopup
+  const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+  const auth = await getAuth();
+  const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
 }
 
@@ -90,42 +164,34 @@ export async function signInWithGoogle(): Promise<void> {
 // Apple
 // ---------------------------------------------------------------------------
 
-/**
- * Apple Sign-In.
- * - iOS native: uses @capacitor-community/apple-sign-in for the native
- *   Apple ID sheet, then links the credential to Firebase JS SDK.
- * - Web / Android: signInWithPopup
- */
 export async function signInWithApple(): Promise<void> {
-  if (getPlatform() === "ios") {
-    // Native Apple Sign-In via Capacitor plugin
-    const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+  // Native iOS: use SocialLogin plugin → get idToken → signInWithCredential
+  if (isNative() && getPlatform() === "ios") {
+    const ready = await initSocialLogin();
+    if (ready) {
+      const { SocialLogin } = await import("@capgo/capacitor-social-login");
 
-    // Generate a nonce for Firebase to validate the token
-    const rawNonce = generateNonce();
-    const { sha256 } = await import("./crypto");
-    const hashedNonce = await sha256(rawNonce);
+      const result = await SocialLogin.login({
+        provider: "apple",
+        options: {
+          scopes: ["email", "name"],
+        },
+      });
 
-    const result = await SignInWithApple.authorize({
-      clientId: "com.comparebible.app",
-      redirectURI: "",
-      scopes: "email name",
-      nonce: hashedNonce,
-    });
+      if (result?.result && "idToken" in result.result && result.result.idToken) {
+        const { OAuthProvider, signInWithCredential } = await import("firebase/auth");
+        const auth = await getAuth();
+        const provider = new OAuthProvider("apple.com");
+        const credential = provider.credential({ idToken: result.result.idToken });
+        await signInWithCredential(auth, credential);
+        return;
+      }
 
-    const idToken = result.response.identityToken;
-    if (!idToken) throw new Error("Apple Sign-In did not return an identity token");
-
-    // Link to Firebase
-    const { OAuthProvider, signInWithCredential } = await import("firebase/auth");
-    const auth = await getAuth();
-    const provider = new OAuthProvider("apple.com");
-    const credential = provider.credential({ idToken, rawNonce });
-    await signInWithCredential(auth, credential);
-    return;
+      throw new Error("Apple Sign-In did not return an ID token");
+    }
   }
 
-  // Web / Android
+  // Web / Android fallback: signInWithPopup
   const { OAuthProvider, signInWithPopup } = await import("firebase/auth");
   const auth = await getAuth();
   const provider = new OAuthProvider("apple.com");
@@ -181,13 +247,8 @@ export async function onAuthStateChanged(
     return () => {};
   }
 
-  const { onAuthStateChanged: _onAuth, getRedirectResult } = await import("firebase/auth");
+  const { onAuthStateChanged: _onAuth } = await import("firebase/auth");
   const auth = await getAuth();
-
-  // Handle redirect result from signInWithRedirect (iOS Google Sign-In)
-  getRedirectResult(auth).catch(() => {
-    // Ignore — no redirect result means user didn't just come back from redirect
-  });
 
   return _onAuth(auth, (firebaseUser) => {
     if (firebaseUser) {
