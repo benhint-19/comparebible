@@ -7,7 +7,22 @@ import { useVoiceStore } from "@/store/voiceStore";
 const getVoice = () => useVoiceStore.getState();
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Platform detection
+// ---------------------------------------------------------------------------
+
+function isNativePlatform(): boolean {
+  try {
+    return (
+      typeof window !== "undefined" &&
+      !!(window as any).Capacitor?.isNativePlatform?.()
+    );
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Web Speech API helpers (fallback for browser)
 // ---------------------------------------------------------------------------
 
 function getSynthesis(): SpeechSynthesis | null {
@@ -15,18 +30,12 @@ function getSynthesis(): SpeechSynthesis | null {
   return window.speechSynthesis ?? null;
 }
 
-/**
- * Pick a natural-sounding English voice if one is available.
- * Prefers voices with "Google" or "Natural" in the name, then falls back
- * to any en-* voice, then the default.
- */
 function pickVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
   const voices = synth.getVoices();
   if (voices.length === 0) return null;
 
   const english = voices.filter((v) => v.lang.startsWith("en"));
 
-  // Prefer natural / high-quality voices
   const natural = english.find(
     (v) =>
       /natural|google|samantha|daniel/i.test(v.name) ||
@@ -34,10 +43,7 @@ function pickVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
   );
   if (natural) return natural;
 
-  // Fall back to any English voice
   if (english.length > 0) return english[0];
-
-  // Last resort
   return voices[0];
 }
 
@@ -48,42 +54,77 @@ function pickVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
 export function useTTS(rate: number = 1) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const rateRef = useRef(rate);
   rateRef.current = rate;
 
-  // Detect TTS support. On iOS WKWebView, speechSynthesis exists but
-  // getVoices() may return an empty list until voices are loaded. We listen
-  // for the voiceschanged event as a fallback.
+  // Native plugin ref (loaded lazily)
+  const nativeRef = useRef<typeof import("@capacitor-community/text-to-speech").TextToSpeech | null>(null);
+  const isNative = useRef(isNativePlatform());
+
+  // Web speech refs
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Load native plugin or detect web support
   useEffect(() => {
-    const synth = getSynthesis();
-    if (!synth) {
-      setIsSupported(false);
-      return;
-    }
-
-    // If voices are already loaded (most Android / desktop browsers)
-    if (synth.getVoices().length > 0) {
+    if (isNative.current) {
+      import("@capacitor-community/text-to-speech").then(({ TextToSpeech }) => {
+        nativeRef.current = TextToSpeech;
+        setIsSupported(true);
+      }).catch(() => {
+        // Fall back to web
+        isNative.current = false;
+        setIsSupported(!!getSynthesis());
+      });
+    } else {
+      const synth = getSynthesis();
+      if (!synth) {
+        setIsSupported(false);
+        return;
+      }
       setIsSupported(true);
-      return;
+      const onVoicesChanged = () => setIsSupported(true);
+      synth.addEventListener("voiceschanged", onVoicesChanged);
+      return () => synth.removeEventListener("voiceschanged", onVoicesChanged);
     }
-
-    // Voices may load asynchronously (iOS / some browsers)
-    setIsSupported(true); // Assume supported since the API exists
-
-    const onVoicesChanged = () => {
-      setIsSupported(synth.getVoices().length > 0 || true);
-    };
-    synth.addEventListener("voiceschanged", onVoicesChanged);
-    return () => synth.removeEventListener("voiceschanged", onVoicesChanged);
   }, []);
 
   const speak = useCallback(
     (text: string, onEnd?: () => void) => {
+      // ---------------------------------------------------------------
+      // Native path — @capacitor-community/text-to-speech
+      // ---------------------------------------------------------------
+      if (isNative.current && nativeRef.current) {
+        const TTS = nativeRef.current;
+        setIsSpeaking(true);
+        getVoice().setSpeaking(true);
+
+        TTS.speak({
+          text,
+          rate: rateRef.current,
+          pitch: 1.0,
+          lang: "en-US",
+        })
+          .then(() => {
+            setIsSpeaking(false);
+            getVoice().setSpeaking(false);
+            onEnd?.();
+          })
+          .catch((err: any) => {
+            // "interrupted" is normal when we call stop()
+            if (String(err).includes("interrupted")) return;
+            console.warn("[TTS] native error:", err);
+            setIsSpeaking(false);
+            getVoice().setSpeaking(false);
+          });
+        return;
+      }
+
+      // ---------------------------------------------------------------
+      // Web Speech API fallback
+      // ---------------------------------------------------------------
       const synth = getSynthesis();
       if (!synth) return;
 
-      // Cancel anything currently playing
       synth.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
@@ -106,12 +147,7 @@ export function useTTS(rate: number = 1) {
       };
 
       utterance.onerror = (event) => {
-        // "interrupted" and "canceled" are normal when we call synth.cancel()
-        if (
-          event.error === "interrupted" ||
-          event.error === "canceled"
-        )
-          return;
+        if (event.error === "interrupted" || event.error === "canceled") return;
         console.warn("[TTS] error:", event.error);
         setIsSpeaking(false);
         getVoice().setSpeaking(false);
@@ -121,9 +157,8 @@ export function useTTS(rate: number = 1) {
       utteranceRef.current = utterance;
       synth.speak(utterance);
 
-      // iOS WKWebView workaround: speechSynthesis can pause itself after
-      // ~15 seconds of continuous speech. A periodic resume() nudge keeps
-      // it going. This is harmless on other platforms.
+      // iOS WKWebView workaround: speechSynthesis pauses itself after ~15s.
+      // Periodic resume() keeps it going. Harmless on other platforms.
       const keepAlive = setInterval(() => {
         if (!synth.speaking) {
           clearInterval(keepAlive);
@@ -133,7 +168,6 @@ export function useTTS(rate: number = 1) {
         synth.resume();
       }, 10000);
 
-      // Clear the interval when the utterance ends
       const origOnEnd = utterance.onend;
       utterance.onend = (ev) => {
         clearInterval(keepAlive);
@@ -149,6 +183,12 @@ export function useTTS(rate: number = 1) {
   );
 
   const stop = useCallback(() => {
+    if (isNative.current && nativeRef.current) {
+      nativeRef.current.stop();
+      setIsSpeaking(false);
+      getVoice().setSpeaking(false);
+      return;
+    }
     const synth = getSynthesis();
     if (!synth) return;
     synth.cancel();
@@ -158,17 +198,24 @@ export function useTTS(rate: number = 1) {
   }, []);
 
   const pause = useCallback(() => {
+    // Native plugin doesn't have pause — stop instead
+    if (isNative.current && nativeRef.current) return;
     getSynthesis()?.pause();
   }, []);
 
   const resume = useCallback(() => {
+    if (isNative.current && nativeRef.current) return;
     getSynthesis()?.resume();
   }, []);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      getSynthesis()?.cancel();
+      if (isNative.current && nativeRef.current) {
+        nativeRef.current.stop();
+      } else {
+        getSynthesis()?.cancel();
+      }
     };
   }, []);
 
