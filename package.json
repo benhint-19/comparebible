@@ -10,13 +10,12 @@
     "cap:build": "CAPACITOR_BUILD=true next build && npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
-    "cap:sync": "npx cap sync",
-    "postinstall": "bash scripts/patch-firebase-auth-spm.sh"
+    "cap:sync": "npx cap sync"
   },
   "dependencies": {
+    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor-community/text-to-speech": "^8.0.0",
-    "@capacitor-firebase/authentication": "^8.1.0",
     "@capacitor/android": "^8.1.0",
     "@capacitor/app": "^8.0.1",
     "@capacitor/core": "^8.1.0",

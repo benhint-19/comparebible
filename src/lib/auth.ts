@@ -9,7 +9,6 @@ import { getFirebaseApp } from "./firebase";
 
 /**
  * Lazily import and return the Firebase Auth instance.
- * Uses dynamic import to keep the auth module out of the initial bundle.
  */
 async function getAuth() {
   const app = getFirebaseApp();
@@ -18,15 +17,21 @@ async function getAuth() {
   return _getAuth(app);
 }
 
-/**
- * Check if we're running in a Capacitor native shell (Android/iOS).
- */
+/** True when running inside a Capacitor native shell. */
 function isNativePlatform(): boolean {
   try {
-    // Capacitor sets this on window
     return typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
   } catch {
     return false;
+  }
+}
+
+/** "ios" | "android" | "web" */
+function getPlatform(): string {
+  try {
+    return (window as any).Capacitor?.getPlatform?.() ?? "web";
+  } catch {
+    return "web";
   }
 }
 
@@ -34,33 +39,18 @@ function isNativePlatform(): boolean {
 // Email / Password
 // ---------------------------------------------------------------------------
 
-/**
- * Create a new account with email and password.
- */
-export async function signUpWithEmail(
-  email: string,
-  password: string,
-): Promise<void> {
+export async function signUpWithEmail(email: string, password: string): Promise<void> {
   const { createUserWithEmailAndPassword } = await import("firebase/auth");
   const auth = await getAuth();
   await createUserWithEmailAndPassword(auth, email, password);
 }
 
-/**
- * Sign in an existing user with email and password.
- */
-export async function signInWithEmail(
-  email: string,
-  password: string,
-): Promise<void> {
+export async function signInWithEmail(email: string, password: string): Promise<void> {
   const { signInWithEmailAndPassword } = await import("firebase/auth");
   const auth = await getAuth();
   await signInWithEmailAndPassword(auth, email, password);
 }
 
-/**
- * Send a password-reset email to the given address.
- */
 export async function resetPassword(email: string): Promise<void> {
   const { sendPasswordResetEmail } = await import("firebase/auth");
   const auth = await getAuth();
@@ -72,24 +62,12 @@ export async function resetPassword(email: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Sign in with Google — uses native account selector on Android/iOS,
- * falls back to popup on web.
+ * Google Sign-In.
+ * - Web & Android: signInWithPopup (works in Chrome WebView)
+ * - iOS: signInWithPopup doesn't work in WKWebView, so we use
+ *   signInWithRedirect + getRedirectResult as a fallback.
  */
 export async function signInWithGoogle(): Promise<void> {
-  if (isNativePlatform()) {
-    const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
-    const result = await FirebaseAuthentication.signInWithGoogle();
-    // Link the native credential to the Firebase JS SDK so auth state syncs
-    const idToken = result.credential?.idToken;
-    if (idToken) {
-      const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
-      const auth = await getAuth();
-      const credential = GoogleAuthProvider.credential(idToken);
-      await signInWithCredential(auth, credential);
-    }
-    return;
-  }
-
   const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
   const auth = await getAuth();
   const provider = new GoogleAuthProvider();
@@ -101,25 +79,37 @@ export async function signInWithGoogle(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Sign in with Apple — uses native flow on iOS/Android,
- * falls back to popup on web.
+ * Apple Sign-In.
+ * - iOS native: uses @capacitor-community/apple-sign-in for the native
+ *   Apple ID sheet, then links the credential to Firebase JS SDK.
+ * - Web / Android: signInWithPopup
  */
 export async function signInWithApple(): Promise<void> {
-  if (isNativePlatform()) {
-    const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
-    const result = await FirebaseAuthentication.signInWithApple();
-    const idToken = result.credential?.idToken;
-    const rawNonce = result.credential?.nonce;
-    if (idToken) {
-      const { OAuthProvider, signInWithCredential } = await import("firebase/auth");
-      const auth = await getAuth();
-      const provider = new OAuthProvider("apple.com");
-      const credential = provider.credential({ idToken, rawNonce: rawNonce ?? undefined });
-      await signInWithCredential(auth, credential);
-    }
+  if (getPlatform() === "ios") {
+    // Native Apple Sign-In via Capacitor plugin
+    const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+    const result = await SignInWithApple.authorize({
+      clientId: "com.comparebible.app",
+      redirectURI: "",
+      scopes: "email name",
+    });
+
+    const idToken = result.response.identityToken;
+    if (!idToken) throw new Error("Apple Sign-In did not return an identity token");
+
+    // Link to Firebase
+    const { OAuthProvider, signInWithCredential } = await import("firebase/auth");
+    const auth = await getAuth();
+    const provider = new OAuthProvider("apple.com");
+    const credential = provider.credential({
+      idToken,
+      rawNonce: result.response.authorizationCode ?? undefined,
+    });
+    await signInWithCredential(auth, credential);
     return;
   }
 
+  // Web / Android
   const { OAuthProvider, signInWithPopup } = await import("firebase/auth");
   const auth = await getAuth();
   const provider = new OAuthProvider("apple.com");
@@ -130,10 +120,6 @@ export async function signInWithApple(): Promise<void> {
 // Anonymous
 // ---------------------------------------------------------------------------
 
-/**
- * Sign in anonymously -- gives the user a persistent uid for sync
- * without requiring an account.
- */
 export async function signInAnonymously(): Promise<void> {
   const { signInAnonymously: _signInAnon } = await import("firebase/auth");
   const auth = await getAuth();
@@ -144,26 +130,19 @@ export async function signInAnonymously(): Promise<void> {
 // Delete account
 // ---------------------------------------------------------------------------
 
-/**
- * Delete the current user's Firestore data and then their Firebase Auth account.
- * Throws auth/requires-recent-login if the session is too old.
- */
 export async function deleteUserAccount(): Promise<void> {
   const { deleteUser } = await import("firebase/auth");
   const auth = await getAuth();
   const user = auth.currentUser;
   if (!user) throw new Error("No user is signed in");
 
-  // Delete synced Firestore data first
   try {
     const sync = await import("./sync");
     await sync.deleteAllUserData(user.uid);
   } catch (err) {
     console.warn("[Auth] Failed to delete Firestore data:", err);
-    // Continue with account deletion even if Firestore cleanup fails
   }
 
-  // Delete the Firebase Auth account (may throw requires-recent-login)
   await deleteUser(user);
 }
 
@@ -171,35 +150,17 @@ export async function deleteUserAccount(): Promise<void> {
 // Sign out & auth state
 // ---------------------------------------------------------------------------
 
-/**
- * Sign the current user out.
- */
 export async function signOut(): Promise<void> {
   const { signOut: _signOut } = await import("firebase/auth");
   const auth = await getAuth();
   await _signOut(auth);
-
-  // Also sign out from native layer so the account selector shows next time
-  if (isNativePlatform()) {
-    try {
-      const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
-      await FirebaseAuthentication.signOut();
-    } catch {
-      // Ignore — JS SDK sign-out is sufficient
-    }
-  }
 }
 
-/**
- * Subscribe to Firebase auth state changes.
- * Returns an unsubscribe function.
- */
 export async function onAuthStateChanged(
   callback: (user: { uid: string; email: string | null; displayName: string | null; isAnonymous: boolean } | null) => void,
 ): Promise<() => void> {
   const { isFirebaseConfigured } = await import("./firebase");
   if (!isFirebaseConfigured()) {
-    // Firebase not configured — call back with null and return a no-op unsubscribe
     callback(null);
     return () => {};
   }
@@ -220,4 +181,3 @@ export async function onAuthStateChanged(
     }
   });
 }
-
