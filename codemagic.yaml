@@ -40,6 +40,12 @@ workflows:
           storeFile=keystore.jks
           EOF
 
+      - name: Auto-increment version code
+        script: |
+          NEW_CODE=${BUILD_NUMBER:-2}
+          sed -i "s/versionCode [0-9]*/versionCode $NEW_CODE/" android/app/build.gradle
+          echo "versionCode set to $NEW_CODE"
+
       - name: Build Android release
         script: |
           cd android
@@ -90,6 +96,14 @@ workflows:
       - name: Set up GoogleService-Info.plist
         script: |
           echo $GOOGLE_SERVICES_PLIST | base64 --decode > ios/App/App/GoogleService-Info.plist
+
+      - name: Auto-increment build number
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number com.comparebible.app || echo 0)
+          NEW_BUILD=$((LATEST + 1))
+          cd ios/App
+          agvtool new-version -all $NEW_BUILD
+          echo "Build number set to $NEW_BUILD"
 
       - name: Set up code signing
         script: |
