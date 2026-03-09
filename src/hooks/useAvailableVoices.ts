@@ -45,19 +45,23 @@ export function useAvailableVoices(): VoiceOption[] {
       const all = synth!.getVoices();
       const english = all.filter((v) => v.lang.startsWith("en"));
 
-      // Only keep voices that match quality patterns
+      // Prefer voices that match quality patterns, but fall back to all English
       const quality = english.filter((v) => QUALITY_PATTERNS.test(v.name));
+      const available = quality.length > 0 ? quality : english;
 
-      // Sort: Natural voices first, then alphabetical
-      quality.sort((a, b) => {
+      // Sort: Natural voices first, then quality matches, then alphabetical
+      available.sort((a, b) => {
         const aNat = /natural/i.test(a.name) ? 0 : 1;
         const bNat = /natural/i.test(b.name) ? 0 : 1;
         if (aNat !== bNat) return aNat - bNat;
+        const aQ = QUALITY_PATTERNS.test(a.name) ? 0 : 1;
+        const bQ = QUALITY_PATTERNS.test(b.name) ? 0 : 1;
+        if (aQ !== bQ) return aQ - bQ;
         return a.name.localeCompare(b.name);
       });
 
       setVoices(
-        quality.map((v) => ({
+        available.map((v) => ({
           uri: v.voiceURI,
           label: friendlyName(v),
           lang: v.lang,

@@ -115,12 +115,18 @@ export function useTTS(rate: number = 1) {
         setIsSpeaking(true);
         getVoice().setSpeaking(true);
 
-        TTS.speak({
+        const selectedURI = useAudioStore.getState().selectedVoiceURI;
+        const ttsOptions: any = {
           text,
           rate: rateRef.current,
           pitch: 1.0,
           lang: "en-US",
-        })
+        };
+        if (selectedURI) {
+          // Capacitor TTS plugin accepts a voice identifier
+          ttsOptions.voice = selectedURI;
+        }
+        TTS.speak(ttsOptions)
           .then(() => {
             setIsSpeaking(false);
             getVoice().setSpeaking(false);

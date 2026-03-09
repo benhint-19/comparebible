@@ -22,13 +22,13 @@ export function TTSControls() {
   // Close picker when clicking outside
   useEffect(() => {
     if (!showVoicePicker) return;
-    function handleClick(e: MouseEvent) {
+    function handleClick(e: Event) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setShowVoicePicker(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("pointerdown", handleClick);
+    return () => document.removeEventListener("pointerdown", handleClick);
   }, [showVoicePicker]);
 
   // Only show in audio mode
