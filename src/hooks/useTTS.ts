@@ -181,9 +181,26 @@ export function useTTS(rate: number = 1) {
       utterance.rate = rateRef.current;
       utterance.pitch = 1;
 
-      // Use the pre-resolved voice (avoids getVoices() returning empty after cancel on mobile)
-      const voice = resolvedVoiceRef.current;
-      if (voice) utterance.voice = voice;
+      // Resolve voice from cached list — getVoices() can return empty after cancel() on mobile.
+      // Also re-lookup by URI to get a fresh object reference (some browsers invalidate old refs).
+      const uri = useAudioStore.getState().selectedVoiceURI;
+      let voice: SpeechSynthesisVoice | null = null;
+
+      // Try live getVoices() first, fall back to cached list
+      let voices = synth.getVoices();
+      if (voices.length === 0) voices = cachedVoicesRef.current;
+
+      if (uri && voices.length > 0) {
+        voice = voices.find((v) => v.voiceURI === uri) ?? null;
+      }
+      if (!voice) {
+        voice = resolvedVoiceRef.current ?? pickBestVoice(voices);
+      }
+      if (voice) {
+        utterance.voice = voice;
+        // Mobile browsers (Chrome Android, Safari) often require lang to match the voice
+        utterance.lang = voice.lang;
+      }
 
       utterance.onstart = () => {
         setIsSpeaking(true);
