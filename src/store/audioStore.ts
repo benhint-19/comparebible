@@ -16,6 +16,8 @@ interface AudioState {
   playbackSpeed: PlaybackSpeed;
   /** Total number of verses in the current chapter. */
   totalVerses: number;
+  /** Selected voice URI for TTS (null = auto-pick best). */
+  selectedVoiceURI: string | null;
 
   // Actions
   toggleAudioMode: () => void;
@@ -26,6 +28,7 @@ interface AudioState {
   setIsListening: (listening: boolean) => void;
   setPlaybackSpeed: (speed: PlaybackSpeed) => void;
   setTotalVerses: (total: number) => void;
+  setSelectedVoiceURI: (uri: string | null) => void;
   nextVerse: () => void;
   prevVerse: () => void;
   reset: () => void;
@@ -40,6 +43,7 @@ export const useAudioStore = create<AudioState>()(
       isListening: false,
       playbackSpeed: 1,
       totalVerses: 0,
+      selectedVoiceURI: null,
 
       toggleAudioMode: () => {
         const current = get().audioMode;
@@ -80,6 +84,8 @@ export const useAudioStore = create<AudioState>()(
 
       setTotalVerses: (total) => set({ totalVerses: total }),
 
+      setSelectedVoiceURI: (uri) => set({ selectedVoiceURI: uri }),
+
       nextVerse: () => {
         const { currentVerseIndex, totalVerses } = get();
         if (currentVerseIndex < totalVerses) {
@@ -106,6 +112,7 @@ export const useAudioStore = create<AudioState>()(
       partialize: (state) => ({
         audioMode: state.audioMode,
         playbackSpeed: state.playbackSpeed,
+        selectedVoiceURI: state.selectedVoiceURI,
       }),
     },
   ),

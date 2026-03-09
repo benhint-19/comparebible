@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { useAudioStore, type PlaybackSpeed } from "@/store/audioStore";
+import { useAvailableVoices } from "@/hooks/useAvailableVoices";
 
 const SPEED_OPTIONS: PlaybackSpeed[] = [0.75, 1, 1.25, 1.5];
 
@@ -11,6 +13,23 @@ export function TTSControls() {
   const totalVerses = useAudioStore((s) => s.totalVerses);
   const playbackSpeed = useAudioStore((s) => s.playbackSpeed);
   const isListening = useAudioStore((s) => s.isListening);
+  const selectedVoiceURI = useAudioStore((s) => s.selectedVoiceURI);
+
+  const voices = useAvailableVoices();
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Close picker when clicking outside
+  useEffect(() => {
+    if (!showVoicePicker) return;
+    function handleClick(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowVoicePicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showVoicePicker]);
 
   // Only show in audio mode
   if (!audioMode) return null;
@@ -23,7 +42,11 @@ export function TTSControls() {
     setPlaybackSpeed,
     setAudioMode,
     setIsListening,
+    setSelectedVoiceURI,
   } = useAudioStore.getState();
+
+  const selectedLabel =
+    voices.find((v) => v.uri === selectedVoiceURI)?.label ?? "Auto";
 
   const cycleSpeed = () => {
     const idx = SPEED_OPTIONS.indexOf(playbackSpeed);
@@ -116,6 +139,57 @@ export function TTSControls() {
           >
             {playbackSpeed}x
           </button>
+
+          {/* Voice picker */}
+          {voices.length > 0 && (
+            <div className="relative" ref={pickerRef}>
+              <button
+                onClick={() => setShowVoicePicker(!showVoicePicker)}
+                aria-label="Select voice"
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-muted)]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+                <span className="hidden sm:inline max-w-[5rem] truncate">{selectedLabel}</span>
+              </button>
+
+              {showVoicePicker && (
+                <div className="absolute bottom-full right-0 mb-2 w-56 max-h-64 overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] shadow-xl">
+                  <div className="p-1.5">
+                    <button
+                      onClick={() => {
+                        setSelectedVoiceURI(null);
+                        setShowVoicePicker(false);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--color-muted)] ${
+                        !selectedVoiceURI ? "text-[var(--color-accent)] font-medium" : "text-[var(--color-foreground)]"
+                      }`}
+                    >
+                      Auto (best available)
+                    </button>
+                    {voices.map((v) => (
+                      <button
+                        key={v.uri}
+                        onClick={() => {
+                          setSelectedVoiceURI(v.uri);
+                          setShowVoicePicker(false);
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--color-muted)] ${
+                          selectedVoiceURI === v.uri ? "text-[var(--color-accent)] font-medium" : "text-[var(--color-foreground)]"
+                        }`}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Exit audio mode */}
           <button

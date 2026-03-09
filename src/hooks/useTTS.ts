@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useVoiceStore } from "@/store/voiceStore";
+import { useAudioStore } from "@/store/audioStore";
 
 // Write-only access — avoids subscribing to all store changes
 const getVoice = () => useVoiceStore.getState();
@@ -34,14 +35,30 @@ function pickVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
   const voices = synth.getVoices();
   if (voices.length === 0) return null;
 
+  // If user has selected a specific voice, use it
+  const selectedURI = useAudioStore.getState().selectedVoiceURI;
+  if (selectedURI) {
+    const selected = voices.find((v) => v.voiceURI === selectedURI);
+    if (selected) return selected;
+  }
+
   const english = voices.filter((v) => v.lang.startsWith("en"));
 
-  const natural = english.find(
-    (v) =>
-      /natural|google|samantha|daniel/i.test(v.name) ||
-      v.name.includes("Enhanced"),
-  );
+  // Prefer Natural voices (highest quality on most platforms)
+  const natural = english.find((v) => /natural/i.test(v.name));
   if (natural) return natural;
+
+  // Then Enhanced / Neural / Premium
+  const enhanced = english.find(
+    (v) => /enhanced|neural|premium/i.test(v.name),
+  );
+  if (enhanced) return enhanced;
+
+  // Then well-known high-quality voices
+  const known = english.find(
+    (v) => /samantha|daniel|google\s+(us|uk)|karen|alex|ava|allison/i.test(v.name),
+  );
+  if (known) return known;
 
   if (english.length > 0) return english[0];
   return voices[0];
