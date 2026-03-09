@@ -31,16 +31,9 @@ function getSynthesis(): SpeechSynthesis | null {
   return window.speechSynthesis ?? null;
 }
 
-function pickVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
-  const voices = synth.getVoices();
+/** Pick the best voice from a cached voice list */
+function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (voices.length === 0) return null;
-
-  // If user has selected a specific voice, use it
-  const selectedURI = useAudioStore.getState().selectedVoiceURI;
-  if (selectedURI) {
-    const selected = voices.find((v) => v.voiceURI === selectedURI);
-    if (selected) return selected;
-  }
 
   const english = voices.filter((v) => v.lang.startsWith("en"));
 
@@ -80,6 +73,40 @@ export function useTTS(rate: number = 1) {
 
   // Web speech refs
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Cached resolved voice — updated when voices load or selection changes
+  const resolvedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const cachedVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
+
+  // Subscribe to selectedVoiceURI changes
+  const selectedVoiceURI = useAudioStore((s) => s.selectedVoiceURI);
+
+  // Resolve the voice whenever voices load or selection changes
+  useEffect(() => {
+    const synth = getSynthesis();
+    if (!synth || isNative.current) return;
+
+    function resolveVoice() {
+      const voices = synth!.getVoices();
+      if (voices.length === 0) return;
+      cachedVoicesRef.current = voices;
+
+      const uri = useAudioStore.getState().selectedVoiceURI;
+      if (uri) {
+        const match = voices.find((v) => v.voiceURI === uri);
+        if (match) {
+          resolvedVoiceRef.current = match;
+          return;
+        }
+      }
+      // No selection or URI not found — pick best available
+      resolvedVoiceRef.current = pickBestVoice(voices);
+    }
+
+    resolveVoice();
+    synth.addEventListener("voiceschanged", resolveVoice);
+    return () => synth.removeEventListener("voiceschanged", resolveVoice);
+  }, [selectedVoiceURI]);
 
   // Load native plugin or detect web support
   useEffect(() => {
@@ -154,7 +181,8 @@ export function useTTS(rate: number = 1) {
       utterance.rate = rateRef.current;
       utterance.pitch = 1;
 
-      const voice = pickVoice(synth);
+      // Use the pre-resolved voice (avoids getVoices() returning empty after cancel on mobile)
+      const voice = resolvedVoiceRef.current;
       if (voice) utterance.voice = voice;
 
       utterance.onstart = () => {
