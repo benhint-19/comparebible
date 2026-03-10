@@ -29,6 +29,7 @@ export function useAudioMode(verses: SimpleVerse[]) {
   const currentVerseIndex = useAudioStore((s) => s.currentVerseIndex);
   const playbackSpeed = useAudioStore((s) => s.playbackSpeed);
   const audioIsListening = useAudioStore((s) => s.isListening);
+  const selectedVoiceURI = useAudioStore((s) => s.selectedVoiceURI);
 
   const {
     play: audioPlay,
@@ -132,6 +133,22 @@ export function useAudioMode(verses: SimpleVerse[]) {
     speakCurrentVerse();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioMode, isPlaying, currentVerseIndex]);
+
+  // -----------------------------------------------------------------------
+  // Restart current verse when voice changes (so user hears it immediately)
+  // -----------------------------------------------------------------------
+  const prevVoiceRef = useRef(selectedVoiceURI);
+  useEffect(() => {
+    if (prevVoiceRef.current === selectedVoiceURI) return;
+    prevVoiceRef.current = selectedVoiceURI;
+
+    if (!audioMode || !isPlaying) return;
+    stopTTS();
+    // Small delay to let cancel() settle before re-speaking
+    const timer = setTimeout(() => speakCurrentVerse(), 50);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVoiceURI]);
 
   // -----------------------------------------------------------------------
   // Stop TTS when paused or audio mode turns off

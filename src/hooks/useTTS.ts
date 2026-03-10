@@ -31,23 +31,20 @@ function getSynthesis(): SpeechSynthesis | null {
   return window.speechSynthesis ?? null;
 }
 
-/** Pick the best voice from a cached voice list */
+/** Pick the best voice from a list */
 function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (voices.length === 0) return null;
 
   const english = voices.filter((v) => v.lang.startsWith("en"));
 
-  // Prefer Natural voices (highest quality on most platforms)
   const natural = english.find((v) => /natural/i.test(v.name));
   if (natural) return natural;
 
-  // Then Enhanced / Neural / Premium
   const enhanced = english.find(
     (v) => /enhanced|neural|premium/i.test(v.name),
   );
   if (enhanced) return enhanced;
 
-  // Then well-known high-quality voices
   const known = english.find(
     (v) => /samantha|daniel|google\s+(us|uk)|karen|alex|ava|allison/i.test(v.name),
   );
@@ -55,6 +52,46 @@ function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | n
 
   if (english.length > 0) return english[0];
   return voices[0];
+}
+
+// ---------------------------------------------------------------------------
+// Module-level voice cache — shared across hook instances, survives re-renders
+// ---------------------------------------------------------------------------
+
+let _cachedVoices: SpeechSynthesisVoice[] = [];
+let _voicesLoaded = false;
+
+function ensureVoicesLoaded(): SpeechSynthesisVoice[] {
+  const synth = getSynthesis();
+  if (!synth) return _cachedVoices;
+
+  const voices = synth.getVoices();
+  if (voices.length > 0) {
+    _cachedVoices = voices;
+    _voicesLoaded = true;
+  }
+  return _cachedVoices;
+}
+
+/** Resolve a voice by URI, with fallback to best available */
+function resolveVoice(uri: string | null): SpeechSynthesisVoice | null {
+  const voices = ensureVoicesLoaded();
+  if (voices.length === 0) return null;
+
+  if (uri) {
+    const match = voices.find((v) => v.voiceURI === uri);
+    if (match) return match;
+  }
+  return pickBestVoice(voices);
+}
+
+// Bootstrap: listen for voiceschanged at module level
+if (typeof window !== "undefined") {
+  const synth = getSynthesis();
+  if (synth) {
+    ensureVoicesLoaded();
+    synth.addEventListener("voiceschanged", ensureVoicesLoaded);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -74,40 +111,6 @@ export function useTTS(rate: number = 1) {
   // Web speech refs
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Cached resolved voice — updated when voices load or selection changes
-  const resolvedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
-  const cachedVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
-
-  // Subscribe to selectedVoiceURI changes
-  const selectedVoiceURI = useAudioStore((s) => s.selectedVoiceURI);
-
-  // Resolve the voice whenever voices load or selection changes
-  useEffect(() => {
-    const synth = getSynthesis();
-    if (!synth || isNative.current) return;
-
-    function resolveVoice() {
-      const voices = synth!.getVoices();
-      if (voices.length === 0) return;
-      cachedVoicesRef.current = voices;
-
-      const uri = useAudioStore.getState().selectedVoiceURI;
-      if (uri) {
-        const match = voices.find((v) => v.voiceURI === uri);
-        if (match) {
-          resolvedVoiceRef.current = match;
-          return;
-        }
-      }
-      // No selection or URI not found — pick best available
-      resolvedVoiceRef.current = pickBestVoice(voices);
-    }
-
-    resolveVoice();
-    synth.addEventListener("voiceschanged", resolveVoice);
-    return () => synth.removeEventListener("voiceschanged", resolveVoice);
-  }, [selectedVoiceURI]);
-
   // Load native plugin or detect web support
   useEffect(() => {
     if (isNative.current) {
@@ -115,7 +118,6 @@ export function useTTS(rate: number = 1) {
         nativeRef.current = TextToSpeech;
         setIsSupported(true);
       }).catch(() => {
-        // Fall back to web
         isNative.current = false;
         setIsSupported(!!getSynthesis());
       });
@@ -150,7 +152,6 @@ export function useTTS(rate: number = 1) {
           lang: "en-US",
         };
         if (selectedURI) {
-          // Capacitor TTS plugin accepts a voice identifier
           ttsOptions.voice = selectedURI;
         }
         TTS.speak(ttsOptions)
@@ -160,7 +161,6 @@ export function useTTS(rate: number = 1) {
             onEnd?.();
           })
           .catch((err: any) => {
-            // "interrupted" is normal when we call stop()
             if (String(err).includes("interrupted")) return;
             console.warn("[TTS] native error:", err);
             setIsSpeaking(false);
@@ -170,7 +170,7 @@ export function useTTS(rate: number = 1) {
       }
 
       // ---------------------------------------------------------------
-      // Web Speech API fallback
+      // Web Speech API
       // ---------------------------------------------------------------
       const synth = getSynthesis();
       if (!synth) return;
@@ -178,29 +178,17 @@ export function useTTS(rate: number = 1) {
       synth.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = rateRef.current;
-      utterance.pitch = 1;
 
-      // Resolve voice from cached list — getVoices() can return empty after cancel() on mobile.
-      // Also re-lookup by URI to get a fresh object reference (some browsers invalidate old refs).
+      // Resolve voice fresh from store + module-level cache every time
       const uri = useAudioStore.getState().selectedVoiceURI;
-      let voice: SpeechSynthesisVoice | null = null;
-
-      // Try live getVoices() first, fall back to cached list
-      let voices = synth.getVoices();
-      if (voices.length === 0) voices = cachedVoicesRef.current;
-
-      if (uri && voices.length > 0) {
-        voice = voices.find((v) => v.voiceURI === uri) ?? null;
-      }
-      if (!voice) {
-        voice = resolvedVoiceRef.current ?? pickBestVoice(voices);
-      }
+      const voice = resolveVoice(uri);
       if (voice) {
         utterance.voice = voice;
-        // Mobile browsers (Chrome Android, Safari) often require lang to match the voice
         utterance.lang = voice.lang;
       }
+
+      utterance.rate = rateRef.current;
+      utterance.pitch = 1;
 
       utterance.onstart = () => {
         setIsSpeaking(true);
@@ -226,7 +214,6 @@ export function useTTS(rate: number = 1) {
       synth.speak(utterance);
 
       // iOS WKWebView workaround: speechSynthesis pauses itself after ~15s.
-      // Periodic resume() keeps it going. Harmless on other platforms.
       const keepAlive = setInterval(() => {
         if (!synth.speaking) {
           clearInterval(keepAlive);
@@ -266,7 +253,6 @@ export function useTTS(rate: number = 1) {
   }, []);
 
   const pause = useCallback(() => {
-    // Native plugin doesn't have pause — stop instead
     if (isNative.current && nativeRef.current) return;
     getSynthesis()?.pause();
   }, []);
