@@ -26,6 +26,7 @@
     "@capacitor/status-bar": "^8.0.1",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@google/generative-ai": "^0.24.1",
+    "edge-tts-universal": "^1.4.0",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.7.0",
     "idb": "^8.0.3",

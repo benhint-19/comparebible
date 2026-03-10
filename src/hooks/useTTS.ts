@@ -4,274 +4,125 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useVoiceStore } from "@/store/voiceStore";
 import { useAudioStore } from "@/store/audioStore";
 
-// Write-only access — avoids subscribing to all store changes
 const getVoice = () => useVoiceStore.getState();
 
 // ---------------------------------------------------------------------------
-// Platform detection
-// ---------------------------------------------------------------------------
-
-function isNativePlatform(): boolean {
-  try {
-    return (
-      typeof window !== "undefined" &&
-      !!(window as any).Capacitor?.isNativePlatform?.()
-    );
-  } catch {
-    return false;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Web Speech API helpers (fallback for browser)
-// ---------------------------------------------------------------------------
-
-function getSynthesis(): SpeechSynthesis | null {
-  if (typeof window === "undefined") return null;
-  return window.speechSynthesis ?? null;
-}
-
-/** Pick the best voice from a list */
-function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
-  if (voices.length === 0) return null;
-
-  const english = voices.filter((v) => v.lang.startsWith("en"));
-
-  const natural = english.find((v) => /natural/i.test(v.name));
-  if (natural) return natural;
-
-  const enhanced = english.find(
-    (v) => /enhanced|neural|premium/i.test(v.name),
-  );
-  if (enhanced) return enhanced;
-
-  const known = english.find(
-    (v) => /samantha|daniel|google\s+(us|uk)|karen|alex|ava|allison/i.test(v.name),
-  );
-  if (known) return known;
-
-  if (english.length > 0) return english[0];
-  return voices[0];
-}
-
-// ---------------------------------------------------------------------------
-// Module-level voice cache — shared across hook instances, survives re-renders
-// ---------------------------------------------------------------------------
-
-let _cachedVoices: SpeechSynthesisVoice[] = [];
-let _voicesLoaded = false;
-
-function ensureVoicesLoaded(): SpeechSynthesisVoice[] {
-  const synth = getSynthesis();
-  if (!synth) return _cachedVoices;
-
-  const voices = synth.getVoices();
-  if (voices.length > 0) {
-    _cachedVoices = voices;
-    _voicesLoaded = true;
-  }
-  return _cachedVoices;
-}
-
-/** Resolve a voice by URI, with fallback to best available */
-function resolveVoice(uri: string | null): SpeechSynthesisVoice | null {
-  const voices = ensureVoicesLoaded();
-  if (voices.length === 0) return null;
-
-  if (uri) {
-    const match = voices.find((v) => v.voiceURI === uri);
-    if (match) return match;
-  }
-  return pickBestVoice(voices);
-}
-
-// Bootstrap: listen for voiceschanged at module level
-if (typeof window !== "undefined") {
-  const synth = getSynthesis();
-  if (synth) {
-    ensureVoicesLoaded();
-    synth.addEventListener("voiceschanged", ensureVoicesLoaded);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Hook
+// Hook — fetches audio from /api/tts and plays it via HTMLAudioElement
 // ---------------------------------------------------------------------------
 
 export function useTTS(rate: number = 1) {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported] = useState(true); // Always supported (server-side TTS)
   const rateRef = useRef(rate);
   rateRef.current = rate;
 
-  // Native plugin ref (loaded lazily)
-  const nativeRef = useRef<typeof import("@capacitor-community/text-to-speech").TextToSpeech | null>(null);
-  const isNative = useRef(isNativePlatform());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  // Track the blob URL so we can revoke it
+  const blobUrlRef = useRef<string | null>(null);
 
-  // Web speech refs
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // Load native plugin or detect web support
-  useEffect(() => {
-    if (isNative.current) {
-      import("@capacitor-community/text-to-speech").then(({ TextToSpeech }) => {
-        nativeRef.current = TextToSpeech;
-        setIsSupported(true);
-      }).catch(() => {
-        isNative.current = false;
-        setIsSupported(!!getSynthesis());
-      });
-    } else {
-      const synth = getSynthesis();
-      if (!synth) {
-        setIsSupported(false);
-        return;
-      }
-      setIsSupported(true);
-      const onVoicesChanged = () => setIsSupported(true);
-      synth.addEventListener("voiceschanged", onVoicesChanged);
-      return () => synth.removeEventListener("voiceschanged", onVoicesChanged);
+  const cleanup = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute("src");
+      audioRef.current.load();
     }
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setIsSpeaking(false);
+    getVoice().setSpeaking(false);
   }, []);
 
   const speak = useCallback(
     (text: string, onEnd?: () => void) => {
-      // ---------------------------------------------------------------
-      // Native path — @capacitor-community/text-to-speech
-      // ---------------------------------------------------------------
-      if (isNative.current && nativeRef.current) {
-        const TTS = nativeRef.current;
-        setIsSpeaking(true);
-        getVoice().setSpeaking(true);
+      // Stop any current playback
+      cleanup();
 
-        const selectedURI = useAudioStore.getState().selectedVoiceURI;
-        const ttsOptions: any = {
-          text,
-          rate: rateRef.current,
-          pitch: 1.0,
-          lang: "en-US",
-        };
-        if (selectedURI) {
-          ttsOptions.voice = selectedURI;
-        }
-        TTS.speak(ttsOptions)
-          .then(() => {
+      const voiceId = useAudioStore.getState().selectedVoiceURI || "andrew";
+      const currentRate = rateRef.current;
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      // Create audio element if needed
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+      const audio = audioRef.current;
+
+      setIsSpeaking(true);
+      getVoice().setSpeaking(true);
+
+      fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice: voiceId, rate: currentRate }),
+        signal: controller.signal,
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(`TTS API error: ${res.status}`);
+          return res.blob();
+        })
+        .then((blob) => {
+          if (controller.signal.aborted) return;
+
+          const url = URL.createObjectURL(blob);
+          blobUrlRef.current = url;
+          audio.src = url;
+
+          audio.onended = () => {
             setIsSpeaking(false);
             getVoice().setSpeaking(false);
+            URL.revokeObjectURL(url);
+            blobUrlRef.current = null;
             onEnd?.();
-          })
-          .catch((err: any) => {
-            if (String(err).includes("interrupted")) return;
-            console.warn("[TTS] native error:", err);
+          };
+
+          audio.onerror = () => {
+            console.warn("[TTS] Audio playback error");
+            setIsSpeaking(false);
+            getVoice().setSpeaking(false);
+            URL.revokeObjectURL(url);
+            blobUrlRef.current = null;
+          };
+
+          audio.play().catch((err) => {
+            if (err.name === "AbortError") return;
+            console.warn("[TTS] Play failed:", err);
             setIsSpeaking(false);
             getVoice().setSpeaking(false);
           });
-        return;
-      }
-
-      // ---------------------------------------------------------------
-      // Web Speech API
-      // ---------------------------------------------------------------
-      const synth = getSynthesis();
-      if (!synth) return;
-
-      synth.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      // Resolve voice fresh from store + module-level cache every time
-      const uri = useAudioStore.getState().selectedVoiceURI;
-      const voice = resolveVoice(uri);
-      if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
-      }
-
-      utterance.rate = rateRef.current;
-      utterance.pitch = 1;
-
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-        getVoice().setSpeaking(true);
-      };
-
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        getVoice().setSpeaking(false);
-        utteranceRef.current = null;
-        onEnd?.();
-      };
-
-      utterance.onerror = (event) => {
-        if (event.error === "interrupted" || event.error === "canceled") return;
-        console.warn("[TTS] error:", event.error);
-        setIsSpeaking(false);
-        getVoice().setSpeaking(false);
-        utteranceRef.current = null;
-      };
-
-      utteranceRef.current = utterance;
-      synth.speak(utterance);
-
-      // iOS WKWebView workaround: speechSynthesis pauses itself after ~15s.
-      const keepAlive = setInterval(() => {
-        if (!synth.speaking) {
-          clearInterval(keepAlive);
-          return;
-        }
-        synth.pause();
-        synth.resume();
-      }, 10000);
-
-      const origOnEnd = utterance.onend;
-      utterance.onend = (ev) => {
-        clearInterval(keepAlive);
-        if (origOnEnd) origOnEnd.call(utterance, ev);
-      };
-      const origOnError = utterance.onerror;
-      utterance.onerror = (ev) => {
-        clearInterval(keepAlive);
-        if (origOnError) origOnError.call(utterance, ev);
-      };
+        })
+        .catch((err) => {
+          if (err.name === "AbortError") return;
+          console.warn("[TTS] Fetch error:", err);
+          setIsSpeaking(false);
+          getVoice().setSpeaking(false);
+        });
     },
-    [],
+    [cleanup],
   );
 
   const stop = useCallback(() => {
-    if (isNative.current && nativeRef.current) {
-      nativeRef.current.stop();
-      setIsSpeaking(false);
-      getVoice().setSpeaking(false);
-      return;
-    }
-    const synth = getSynthesis();
-    if (!synth) return;
-    synth.cancel();
-    setIsSpeaking(false);
-    getVoice().setSpeaking(false);
-    utteranceRef.current = null;
-  }, []);
+    cleanup();
+  }, [cleanup]);
 
   const pause = useCallback(() => {
-    if (isNative.current && nativeRef.current) return;
-    getSynthesis()?.pause();
+    audioRef.current?.pause();
   }, []);
 
   const resume = useCallback(() => {
-    if (isNative.current && nativeRef.current) return;
-    getSynthesis()?.resume();
+    audioRef.current?.play().catch(() => {});
   }, []);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (isNative.current && nativeRef.current) {
-        nativeRef.current.stop();
-      } else {
-        getSynthesis()?.cancel();
-      }
-    };
-  }, []);
+    return () => cleanup();
+  }, [cleanup]);
 
   return { speak, stop, pause, resume, isSpeaking, isSupported };
 }

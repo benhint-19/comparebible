@@ -46,7 +46,7 @@ export function TTSControls() {
   } = useAudioStore.getState();
 
   const selectedLabel =
-    voices.find((v) => v.uri === selectedVoiceURI)?.label ?? "Auto";
+    voices.find((v) => v.uri === selectedVoiceURI)?.label ?? voices[0]?.label ?? "Voice";
 
   const cycleSpeed = () => {
     const idx = SPEED_OPTIONS.indexOf(playbackSpeed);
@@ -160,17 +160,6 @@ export function TTSControls() {
               {showVoicePicker && (
                 <div className="absolute bottom-full right-0 mb-2 w-56 max-h-64 overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] shadow-xl">
                   <div className="p-1.5">
-                    <button
-                      onClick={() => {
-                        setSelectedVoiceURI(null);
-                        setShowVoicePicker(false);
-                      }}
-                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--color-muted)] ${
-                        !selectedVoiceURI ? "text-[var(--color-accent)] font-medium" : "text-[var(--color-foreground)]"
-                      }`}
-                    >
-                      Auto (best available)
-                    </button>
                     {voices.map((v) => (
                       <button
                         key={v.uri}
@@ -179,9 +168,14 @@ export function TTSControls() {
                           setShowVoicePicker(false);
                         }}
                         className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--color-muted)] ${
-                          selectedVoiceURI === v.uri ? "text-[var(--color-accent)] font-medium" : "text-[var(--color-foreground)]"
+                          selectedVoiceURI === v.uri || (!selectedVoiceURI && v.uri === voices[0]?.uri)
+                            ? "text-[var(--color-accent)] font-medium"
+                            : "text-[var(--color-foreground)]"
                         }`}
                       >
+                        <span className="text-[var(--color-muted-foreground)] text-xs w-4">
+                          {v.gender === "male" ? "M" : "F"}
+                        </span>
                         {v.label}
                       </button>
                     ))}
