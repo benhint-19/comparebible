@@ -7,7 +7,7 @@ import AIPerspectivePanel from "@/components/ai/AIPerspectivePanel";
 import { VoiceFeedback } from "@/components/voice/VoiceFeedback";
 import { TTSControls } from "@/components/voice/TTSControls";
 import OfflineBanner from "@/components/ui/OfflineBanner";
-import OnboardingModal from "@/components/quiz/OnboardingModal";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import VerseOfDay from "@/components/ui/VerseOfDay";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
@@ -25,7 +25,7 @@ export default function Home() {
 
       <ChapterNav />
 
-      <OnboardingModal />
+      <OnboardingTour />
       <VerseOfDay />
       <AIPerspectivePanel />
       <VoiceFeedback />

@@ -13,7 +13,7 @@ import TranslationSelect, { getAllTranslations } from "@/components/ui/Translati
 import QuizWizard from "@/components/quiz/QuizWizard";
 
 export default function SettingsPage() {
-  const { fontSize, setFontSize, quizCompleted, setQuizCompleted } = useSettingsStore();
+  const { fontSize, setFontSize, quizCompleted, setQuizCompleted, onboardingCompleted, setOnboardingCompleted, neverShowOnboarding, setNeverShowOnboarding } = useSettingsStore();
   const [showQuiz, setShowQuiz] = useState(false);
   const {
     primaryTranslation,
@@ -241,6 +241,35 @@ export default function SettingsPage() {
           authBusy={authBusy}
           setAuthBusy={setAuthBusy}
         />
+
+        {/* Onboarding Tour */}
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+          <h2 className="font-medium mb-2">App Tour</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+            Walk through the setup and features of Selah.
+          </p>
+          <div className="space-y-3">
+            <Link
+              href="/"
+              onClick={() => {
+                setOnboardingCompleted(false);
+                setNeverShowOnboarding(false);
+              }}
+              className="inline-block text-sm text-[var(--color-accent)] hover:underline"
+            >
+              Relaunch tour
+            </Link>
+            <label className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={neverShowOnboarding}
+                onChange={(e) => setNeverShowOnboarding(e.target.checked)}
+                className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
+              />
+              Never show tour on startup
+            </label>
+          </div>
+        </section>
 
         {/* About */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useReaderStore } from "@/store/readerStore";
 import { useAudioStore } from "@/store/audioStore";
 import { getBookById } from "@/lib/bible/books";
-import ThemeToggle from "@/components/ui/ThemeToggle";
 import BookPicker from "@/components/reader/BookPicker";
 import TestamentSwitcher from "@/components/reader/TestamentSwitcher";
 import { AudioModeSheet } from "@/components/voice/AudioModeSheet";
@@ -105,7 +104,6 @@ export default function AppHeader() {
                 <circle cx="12" cy="12" r="3" />
               </svg>
             </Link>
-            <ThemeToggle />
           </div>
         </div>
         <TestamentSwitcher />

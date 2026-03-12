@@ -10,12 +10,16 @@ interface SettingsState {
   pushEnabled: boolean;
   pushTime: string;
   hasSeenWelcome: boolean;
+  onboardingCompleted: boolean;
+  neverShowOnboarding: boolean;
   setTheme: (theme: "light" | "dark" | "system") => void;
   setFontSize: (size: number) => void;
   setQuizCompleted: (completed: boolean) => void;
   setPushEnabled: (enabled: boolean) => void;
   setPushTime: (time: string) => void;
   setHasSeenWelcome: (v: boolean) => void;
+  setOnboardingCompleted: (v: boolean) => void;
+  setNeverShowOnboarding: (v: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -27,6 +31,8 @@ export const useSettingsStore = create<SettingsState>()(
       pushEnabled: false,
       pushTime: "08:00",
       hasSeenWelcome: false,
+      onboardingCompleted: false,
+      neverShowOnboarding: false,
 
       setTheme: (theme) => set({ theme }),
 
@@ -39,6 +45,10 @@ export const useSettingsStore = create<SettingsState>()(
       setPushTime: (time) => set({ pushTime: time }),
 
       setHasSeenWelcome: (v) => set({ hasSeenWelcome: v }),
+
+      setOnboardingCompleted: (v) => set({ onboardingCompleted: v }),
+
+      setNeverShowOnboarding: (v) => set({ neverShowOnboarding: v }),
     }),
     {
       name: "settings-storage",
