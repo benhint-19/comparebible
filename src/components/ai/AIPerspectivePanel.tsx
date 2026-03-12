@@ -45,7 +45,7 @@ export default function AIPerspectivePanel() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-[var(--border)]">
           <h2 className="text-base font-semibold text-[var(--foreground)]">
-            AI Perspectives
+            Scholarly Perspectives
           </h2>
           <button
             onClick={togglePanel}
@@ -112,7 +112,7 @@ export default function AIPerspectivePanel() {
               <SinglePersonaResponse personaId={selectedPersona} />
             ) : (
               <p className="text-sm text-[var(--muted-foreground)] text-center py-8">
-                Select a perspective above to see AI analysis of the current
+                Select a perspective above to see analysis of the current
                 passage.
               </p>
             )}
@@ -134,7 +134,7 @@ function CombinedAnalysisWrapper() {
   if (!passage) {
     return (
       <p className="text-sm text-[var(--muted-foreground)] text-center py-8">
-        Navigate to a chapter to see AI analysis.
+        Navigate to a chapter to see persona analysis.
       </p>
     );
   }
@@ -157,7 +157,7 @@ function SinglePersonaResponse({ personaId }: { personaId: string }) {
   if (!passage) {
     return (
       <p className="text-sm text-[var(--muted-foreground)] text-center py-8">
-        Navigate to a chapter to see AI analysis.
+        Navigate to a chapter to see persona analysis.
       </p>
     );
   }

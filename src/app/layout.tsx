@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Selah - Parallel Bible Audio & Perspectives",
-  description: "Listen to and compare Bible translations side-by-side with AI-powered scholarly perspectives",
+  description: "Listen to and compare Bible translations side-by-side with scholarly persona perspectives",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon-192.png",

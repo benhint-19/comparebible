@@ -171,9 +171,9 @@ export default function SettingsPage() {
           />
         </section>
 
-        {/* AI Perspectives */}
+        {/* Scholarly Perspectives */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-          <h2 className="font-medium mb-2">AI Perspectives</h2>
+          <h2 className="font-medium mb-2">Scholarly Perspectives</h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
             Choose which scholarly perspectives to include when analyzing passages.
           </p>
@@ -188,6 +188,14 @@ export default function SettingsPage() {
           </p>
           <PushToggle />
         </section>
+
+        {/* Account & Sync */}
+        <AccountSyncSection
+          user={user}
+          authLoading={authLoading}
+          authBusy={authBusy}
+          setAuthBusy={setAuthBusy}
+        />
 
         {/* Voice Commands */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
@@ -214,7 +222,7 @@ export default function SettingsPage() {
               <h3 className="font-medium text-[var(--color-foreground)] mb-1.5">Exploration</h3>
               <ul className="space-y-1 text-[var(--color-muted-foreground)]">
                 <li>&ldquo;Compare&rdquo; or &ldquo;Show translations&rdquo; &mdash; Expand the current verse to show parallel translations</li>
-                <li>&ldquo;Analyze this&rdquo; or &ldquo;Go deeper&rdquo; &mdash; Open AI analysis for the current verse</li>
+                <li>&ldquo;Analyze this&rdquo; or &ldquo;Go deeper&rdquo; &mdash; Open persona analysis for the current verse</li>
                 <li>&ldquo;What does this mean?&rdquo; or &ldquo;Perspectives&rdquo; &mdash; Same as above</li>
                 <li>&ldquo;Take a note&rdquo; or &ldquo;Add note&rdquo; &mdash; Pause and open the note editor for the current verse</li>
               </ul>
@@ -233,14 +241,6 @@ export default function SettingsPage() {
             </p>
           </div>
         </section>
-
-        {/* Account & Sync */}
-        <AccountSyncSection
-          user={user}
-          authLoading={authLoading}
-          authBusy={authBusy}
-          setAuthBusy={setAuthBusy}
-        />
 
         {/* Onboarding Tour */}
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
@@ -275,8 +275,8 @@ export default function SettingsPage() {
         <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
           <h2 className="font-medium mb-2">About</h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
-            Selah - Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore AI-powered analysis from multiple scholarly perspectives.
-            Bible text from bible.helloao.org. AI analysis powered by Google Gemini.
+            Selah - Pause and reflect. Compare how different English translators have interpreted Bible passages over the centuries, listen in audiobook mode, and explore analysis from multiple scholarly perspectives.
+            Bible text from bible.helloao.org. Scholarly analysis powered by Google Gemini.
           </p>
           <div className="flex flex-wrap gap-4 text-sm">
             <Link href="/support" className="text-[var(--color-accent)] hover:underline">Support</Link>

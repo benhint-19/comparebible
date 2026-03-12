@@ -32,13 +32,13 @@ const STEP_ORDER: StepId[] = [
   "primary-translation",
   "parallel-translations",
   "ai-perspectives",
-  "voice-overview",
   "tour-navigation",
   "tour-verses",
   "tour-ai",
   "tour-notes",
   "tour-notes-page",
   "tour-voice-controls",
+  "voice-overview",
   "done",
 ];
 
@@ -46,11 +46,11 @@ const STEP_META: Record<StepId, { title: string; phase: "setup" | "tour" | "meta
   welcome:                { title: "Welcome",               phase: "meta" },
   "primary-translation":  { title: "Primary Translation",   phase: "setup" },
   "parallel-translations":{ title: "Parallel Translations",  phase: "setup" },
-  "ai-perspectives":      { title: "AI Perspectives",       phase: "setup" },
-  "voice-overview":       { title: "Voice Commands",        phase: "setup" },
+  "ai-perspectives":      { title: "Scholarly Perspectives", phase: "setup" },
+  "voice-overview":       { title: "Voice Commands",        phase: "tour" },
   "tour-navigation":      { title: "Navigate",              phase: "tour" },
   "tour-verses":          { title: "Compare Verses",        phase: "tour" },
-  "tour-ai":              { title: "AI Analysis",           phase: "tour" },
+  "tour-ai":              { title: "Persona Analysis",      phase: "tour" },
   "tour-notes":           { title: "Take Notes",            phase: "tour" },
   "tour-notes-page":      { title: "View Notes",            phase: "tour" },
   "tour-voice-controls":  { title: "Audio Controls",        phase: "tour" },
@@ -195,7 +195,7 @@ function WelcomeStep() {
       </div>
       <h2 className="text-2xl font-bold">Welcome to Selah</h2>
       <p className="text-[var(--color-muted-foreground)] leading-relaxed">
-        Compare Bible translations side by side, explore AI-powered scholarly perspectives,
+        Compare Bible translations side by side, explore scholarly perspectives from multiple viewpoints,
         listen in audio mode, and save notes on any verse.
       </p>
       <p className="text-sm text-[var(--color-muted-foreground)]">
@@ -368,9 +368,9 @@ function AIPerspectivesStep() {
       <div className="flex items-start gap-3">
         <span className="text-2xl shrink-0">&#129504;</span>
         <div>
-          <h2 className="text-lg font-bold">AI Perspectives</h2>
+          <h2 className="text-lg font-bold">Scholarly Perspectives</h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-            Choose up to 6 scholarly viewpoints for AI-powered verse analysis.
+            Choose up to 6 scholarly viewpoints for persona-driven verse analysis.
             Each perspective interprets passages through a different lens.
           </p>
         </div>
@@ -450,7 +450,7 @@ function VoiceOverviewStep() {
           <h3 className="font-medium text-[var(--color-foreground)] mb-2">Exploration</h3>
           <div className="grid grid-cols-2 gap-1.5 text-xs text-[var(--color-muted-foreground)]">
             <span>&ldquo;Compare&rdquo;</span><span>Show parallel translations</span>
-            <span>&ldquo;Analyze this&rdquo;</span><span>Open AI perspectives</span>
+            <span>&ldquo;Analyze this&rdquo;</span><span>Open persona analysis</span>
             <span>&ldquo;Take a note&rdquo;</span><span>Open note editor</span>
           </div>
         </div>
@@ -564,14 +564,14 @@ function TourVersesStep() {
 
 function TourAIStep() {
   return (
-    <TourStepLayout icon="&#10024;" title="AI Analysis">
+    <TourStepLayout icon="&#10024;" title="Persona Analysis">
       <div className="space-y-3 text-sm text-[var(--color-muted-foreground)]">
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] p-4 space-y-3">
           <p>
             After expanding a verse, tap the{" "}
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--color-muted)] text-xs font-medium text-[var(--color-foreground)]">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3l2.5 7.5H22l-6 4.5 2.5 7.5L12 18l-6.5 4.5L8 15 2 10.5h7.5z"/></svg>
-              AI Analysis
+              Persona Analysis
             </span>{" "}
             button to open the perspectives panel.
           </p>
@@ -713,7 +713,7 @@ function DoneStep() {
       <h2 className="text-2xl font-bold">You&apos;re All Set!</h2>
       <p className="text-[var(--color-muted-foreground)] leading-relaxed">
         Your preferences are saved. Start reading and tap any verse to explore translations,
-        AI perspectives, and notes.
+        scholarly perspectives, and notes.
       </p>
       <p className="text-sm text-[var(--color-muted-foreground)]">
         You can relaunch this tour anytime from <span className="font-medium text-[var(--color-foreground)]">Settings</span>.

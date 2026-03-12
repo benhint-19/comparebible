@@ -33,7 +33,7 @@ export default function AIPerspectiveButton({
         hover:opacity-90 transition-opacity cursor-pointer
         shadow-sm
       "
-      aria-label="Open AI Perspectives"
+      aria-label="Open scholarly perspectives"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -48,7 +48,7 @@ export default function AIPerspectiveButton({
       >
         <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
       </svg>
-      AI Perspectives
+      Perspectives
     </button>
   );
 }

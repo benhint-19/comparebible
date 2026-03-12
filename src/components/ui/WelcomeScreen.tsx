@@ -52,7 +52,7 @@ export default function WelcomeScreen() {
 
         {/* App description */}
         <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">
-          Compare Bible translations side by side, explore AI-powered scholarly perspectives, listen in audio mode, and take notes on any verse.
+          Compare Bible translations side by side, explore scholarly perspectives from multiple viewpoints, listen in audio mode, and take notes on any verse.
         </p>
 
         {/* Sign-in */}

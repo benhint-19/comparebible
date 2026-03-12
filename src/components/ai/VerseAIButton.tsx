@@ -41,7 +41,7 @@ export default function VerseAIButton({
         transition-colors cursor-pointer
         mt-1
       "
-      aria-label="AI Analysis for this verse"
+      aria-label="Persona analysis for this verse"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -56,7 +56,7 @@ export default function VerseAIButton({
       >
         <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
       </svg>
-      AI Analysis
+      Persona Analysis
     </button>
   );
 }

@@ -54,7 +54,7 @@ SCREENSHOTS = [
         "subtitle": "Tap any verse to see\nparallel translations",
         "callouts": [
             (0.50, 0.40, "NIV, ESV, KJV\nside by side", "left"),
-            (0.50, 0.73, "AI Analysis button", "left"),
+            (0.50, 0.73, "Persona Analysis button", "left"),
             (0.50, 0.78, "Add personal note", "left"),
         ],
     },
@@ -65,13 +65,13 @@ SCREENSHOTS = [
         "callouts": [
             (0.12, 0.08, "Note indicator dot", "down"),
             (0.50, 0.57, "Your saved note\nwith edit & delete", "left"),
-            (0.50, 0.52, "AI Analysis\navailable here too", "right"),
+            (0.50, 0.52, "Persona Analysis\navailable here too", "right"),
         ],
     },
     {
         "file": "Screenshot_20260304-140119.png",
-        "title": "AI Perspectives",
-        "subtitle": "14 scholarly viewpoints\non any passage",
+        "title": "Scholarly Perspectives",
+        "subtitle": "14 viewpoints from scholars,\ntheologians & historians",
         "callouts": [
             (0.30, 0.15, "Tap a perspective\nto generate analysis", "down"),
             (0.50, 0.55, "Combined Analysis\nfrom all 6 at once", "up"),
@@ -80,9 +80,9 @@ SCREENSHOTS = [
     {
         "file": "Screenshot_20260304-140402.png",
         "title": "Choose Perspectives",
-        "subtitle": "Pick up to 6 AI scholars\nfor your study",
+        "subtitle": "Pick up to 6 scholarly\npersonas for your study",
         "callouts": [
-            (0.50, 0.10, "14 perspectives:\ntheologians, historians,\nphilosophers & more", "down"),
+            (0.50, 0.10, "14 scholarly personas:\ntheologians, historians,\nphilosophers & more", "down"),
             (0.50, 0.92, "6 / 6 selected", "up"),
         ],
     },

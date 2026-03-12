@@ -39,7 +39,7 @@ export function AudioModeSheet({ onClose }: { onClose: () => void }) {
             <span>&ldquo;Compare&rdquo;</span>
             <span className="text-[var(--color-foreground)]">Show translations</span>
             <span>&ldquo;Analyze this&rdquo;</span>
-            <span className="text-[var(--color-foreground)]">AI perspective</span>
+            <span className="text-[var(--color-foreground)]">Persona analysis</span>
             <span>&ldquo;Take a note&rdquo;</span>
             <span className="text-[var(--color-foreground)]">Open note editor</span>
             <span>&ldquo;Exit audio mode&rdquo;</span>
