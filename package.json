@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "cap:build": "CAPACITOR_BUILD=true next build && npx cap sync",
+    "cap:build": "CAPACITOR_BUILD=true bash -c 'mv src/app/api/push/send-votd/route.ts src/app/api/push/send-votd/route.ts.server && next build; STATUS=$?; mv src/app/api/push/send-votd/route.ts.server src/app/api/push/send-votd/route.ts; exit $STATUS' && npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
     "cap:sync": "npx cap sync",
