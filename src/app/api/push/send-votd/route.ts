@@ -68,6 +68,11 @@ export async function GET(request: Request) {
           chapter: String(votd.chapter),
           verse: String(votd.verse),
         },
+        android: {
+          notification: {
+            channelId: "votd",
+          },
+        },
       });
 
       totalSuccess += response.successCount;

@@ -5,6 +5,7 @@ import { useTranslationStore } from "@/store/translationStore";
 import { fetchVerseRange } from "@/lib/bible/api";
 import type { VerseRange } from "@/lib/bible/types";
 import VerseAIButton from "@/components/ai/VerseAIButton";
+import { getTranslationName, formatTranslationId } from "@/lib/bible/translation-names";
 
 interface ParallelVersesProps {
   bookId: string;
@@ -91,8 +92,11 @@ export default function ParallelVerses({
             key={range.translationId}
             className="rounded-lg border-l-3 border-[var(--accent)] bg-[var(--muted)] px-3 py-2 sm:px-4 sm:py-3"
           >
-            <span className="mr-2 inline-block rounded bg-[var(--accent)] px-1.5 py-0.5 text-xs font-semibold text-[var(--accent-foreground)]">
-              {range.translationId}
+            <span
+              title={getTranslationName(range.translationId)}
+              className="mr-2 inline-block rounded bg-[var(--accent)] px-1.5 py-0.5 text-xs font-semibold text-[var(--accent-foreground)]"
+            >
+              {formatTranslationId(range.translationId)}
             </span>
             <span className="text-sm leading-relaxed text-[var(--foreground)]">
               {verseText}

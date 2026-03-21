@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { searchBible, type SearchResult } from "@/lib/bible/search";
 import { useReaderStore } from "@/store/readerStore";
 import { useTranslationStore } from "@/store/translationStore";
+import { getTranslationName, formatTranslationId } from "@/lib/bible/translation-names";
 
 interface SearchResultsProps {
   query: string;
@@ -139,8 +140,11 @@ export default function SearchResults({ query }: SearchResultsProps) {
                 <span className="text-sm font-medium text-accent">
                   {result.bookName} {result.chapter}:{result.verseNumber}
                 </span>
-                <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent uppercase tracking-wide">
-                  {result.translationId}
+                <span
+                  title={getTranslationName(result.translationId)}
+                  className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent uppercase tracking-wide"
+                >
+                  {formatTranslationId(result.translationId)}
                 </span>
               </div>
               <p className="mt-1 text-sm leading-relaxed text-foreground">

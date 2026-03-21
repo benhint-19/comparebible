@@ -51,16 +51,24 @@ export async function registerForPush(preferredHour: number = 8): Promise<string
   // Detect the user's IANA timezone (e.g. "America/New_York")
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Send to our API
+  // Send to our API — return null if this fails so callers know
+  // the server didn't receive the token (prevents false "enabled" state).
   try {
     const { API_BASE_URL } = await import("@/lib/apiBase");
-    await fetch(`${API_BASE_URL}/api/push/register`, {
+    const url = `${API_BASE_URL}/api/push/register`;
+    console.log("[push] Registering token with server:", url);
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, platform, timezone, preferredHour }),
     });
+    if (!res.ok) {
+      console.error("[push] Server rejected token registration:", res.status, await res.text().catch(() => ""));
+      return null;
+    }
   } catch (err) {
     console.error("[push] Failed to register token with server:", err);
+    return null;
   }
 
   return token;
@@ -81,12 +89,13 @@ async function registerNative(): Promise<string | null> {
       return null;
     }
 
-    // Register with APNs / FCM
-    await PushNotifications.register();
-
-    // Wait for the registration event to fire with the token
-    return await new Promise<string | null>((resolve) => {
-      const timeout = setTimeout(() => resolve(null), 10_000);
+    // Set up listeners BEFORE calling register() to avoid race condition
+    // where the native side fires the event before the JS listener is attached.
+    const tokenPromise = new Promise<string | null>((resolve) => {
+      const timeout = setTimeout(() => {
+        console.warn("[push] Native registration timed out after 10s");
+        resolve(null);
+      }, 10_000);
 
       PushNotifications.addListener("registration", (regToken) => {
         clearTimeout(timeout);
@@ -99,6 +108,11 @@ async function registerNative(): Promise<string | null> {
         resolve(null);
       });
     });
+
+    // Register with APNs / FCM
+    await PushNotifications.register();
+
+    return await tokenPromise;
   } catch (err) {
     console.error("[push] Native push module unavailable:", err);
     return null;

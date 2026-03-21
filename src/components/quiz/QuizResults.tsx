@@ -3,17 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useTranslationStore } from "@/store/translationStore";
 import { useSettingsStore } from "@/store/settingsStore";
-import { translationProfiles } from "@/lib/quiz/translations";
 import type { QuizResult } from "@/lib/quiz/scoring";
+import { getTranslationName, formatTranslationId } from "@/lib/bible/translation-names";
 
 interface QuizResultsProps {
   result: QuizResult;
   onRetake: () => void;
   onComplete?: () => void;
-}
-
-function getTranslationName(id: string): string {
-  return translationProfiles.find((t) => t.id === id)?.name ?? id;
 }
 
 export default function QuizResults({ result, onRetake, onComplete }: QuizResultsProps) {
@@ -44,7 +40,7 @@ export default function QuizResults({ result, onRetake, onComplete }: QuizResult
           {getTranslationName(result.primary)}
         </h2>
         <p className="text-sm text-[var(--color-muted,var(--color-foreground))]/60">
-          {result.primary}
+          {formatTranslationId(result.primary)}
         </p>
       </div>
 
@@ -63,7 +59,7 @@ export default function QuizResults({ result, onRetake, onComplete }: QuizResult
                 {getTranslationName(id)}
               </p>
               <p className="text-xs text-[var(--color-muted,var(--color-foreground))]/60">
-                {id}
+                {formatTranslationId(id)}
               </p>
             </div>
           ))}
